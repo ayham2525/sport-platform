@@ -1,0 +1,31 @@
+<?php
+
+return [
+    'title' => 'Systems',
+    'subtitle' => 'Manage all available systems',
+    'dashboard' => 'Dashboard',
+    'new' => 'New System',
+    'name' => 'Name',
+    'description' => 'Description',
+    'created_at' => 'Created At',
+    'actions' => 'Actions',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'search' => 'Search systems...',
+    'created_successfully' => 'System created successfully.',
+    'updated_successfully' => 'System updated successfully.',
+    'deleted_successfully' => 'System deleted successfully.',
+    'delete_confirmation_title' => 'Are you sure?',
+    'delete_confirmation_text' => 'This will delete the system permanently!',
+    'confirm_delete' => 'Yes, delete it!',
+    'cancel' => 'Cancel',
+    'create' => 'Create',
+    'create_title' => 'Create System',
+    'add_new' => 'Add New System',
+    'name_placeholder' => 'Enter system name',
+    'description_placeholder' => 'Enter system description',
+    'save' => 'Save',
+    'edit_title' => 'Edit System',
+    'update' => 'Update',
+
+];

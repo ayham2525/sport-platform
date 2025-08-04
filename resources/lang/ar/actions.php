@@ -1,0 +1,22 @@
+<?php
+return [
+    'view' => 'عرض',
+    'edit' => 'تعديل',
+    'delete' => 'حذف',
+    'save' => 'حفظ',
+    'cancel' => 'إلغاء',
+    'back' => 'رجوع',
+    'filter' => 'تصفية',
+    'search' => 'بحث',
+    'select_all' => 'تحديد الكل',
+    'save_changes' => 'حفظ التغييرات',
+    'generate' => 'توليد',
+    'create' => 'إنشاء',
+    'add' => 'إضافة',
+    'update_image' => 'تحديث الصورة',
+     'update_account' => 'تعديل الحساب',
+     'update' => 'تحديث',
+     'actions' => 'الإجراءات',
+      'add_class' => 'إضافة حصة',
+      'confirm' => 'تأكيد',
+];

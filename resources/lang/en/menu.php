@@ -1,0 +1,15 @@
+<?php return [
+    'settings' => 'Settings',
+    'features' => 'Features',
+     'administrative_areas' => 'Administrative Areas',
+    'countries' => 'Countries',
+    'states' => 'States',
+    'cities' => 'Cities',
+    'branches_academies' => 'Branches & Academies',
+    'system_management' => 'System Management',
+    'payment_methods' => 'Payment Methods',
+    'branches' => 'Branches',
+    'users' => 'Users',
+    'system_settings' => 'System Settings',
+    'systems' => 'Systems',
+];?>

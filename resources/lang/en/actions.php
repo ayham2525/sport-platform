@@ -1,0 +1,22 @@
+<?php
+return [
+    'view' => 'View',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'save' => 'Save',
+    'cancel' => 'Cancel',
+    'back' => 'Back',
+    'filter' => 'Filter',
+    'search' => 'Search',
+    'select_all' => 'Select All',
+    'save_changes' => 'Save Changes',
+    'generate' => 'Generate',
+    'create' => 'Create',
+    'add' => 'Add',
+    'update_image' => 'Update Image',
+    'update_account' => 'Update Account',
+    'update' => 'Update',
+    'actions' => 'Actions',
+    'add_class' => 'Add Class',
+    'confirm' => 'Confirm',
+];

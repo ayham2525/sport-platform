@@ -1,0 +1,31 @@
+<?php
+
+return [
+    'title' => 'الأنظمة',
+    'subtitle' => 'إدارة جميع الأنظمة المتاحة',
+    'dashboard' => 'لوحة التحكم',
+    'new' => 'نظام جديد',
+    'name' => 'الاسم',
+    'description' => 'الوصف',
+    'created_at' => 'تاريخ الإنشاء',
+    'actions' => 'الإجراءات',
+    'edit' => 'تعديل',
+    'delete' => 'حذف',
+    'search' => 'ابحث في الأنظمة...',
+    'created_successfully' => 'تم إنشاء النظام بنجاح.',
+    'updated_successfully' => 'تم تحديث النظام بنجاح.',
+    'deleted_successfully' => 'تم حذف النظام بنجاح.',
+    'delete_confirmation_title' => 'هل أنت متأكد؟',
+    'delete_confirmation_text' => 'سيتم حذف النظام نهائياً!',
+    'confirm_delete' => 'نعم، احذفه!',
+    'cancel' => 'إلغاء',
+    'create' => 'إنشاء',
+    'create_title' => 'إنشاء نظام',
+    'add_new' => 'إضافة نظام جديد',
+    'name_placeholder' => 'أدخل اسم النظام',
+    'description_placeholder' => 'أدخل وصف النظام',
+    'save' => 'حفظ',
+    'edit_title' => 'تعديل النظام',
+    'update' => 'تحديث',
+
+];

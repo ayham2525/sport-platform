@@ -1,0 +1,158 @@
+<?php
+
+return [
+
+    'titles' => [
+        'dashboard' => 'Dashboard',
+        'players' => 'Players',
+        'players_management' => 'Manage Players',
+        'new_record' => 'New Player',
+        'edit_record' => 'Edit Player',
+        'players_list' => 'Players List',
+        'add_new_player' => 'Add New Player',
+        'view_player' => 'View Player',
+        'assign_program' => 'Assign Program to Player',
+    ],
+
+    'fields' => [
+        'name' => 'Name',
+        'email' => 'Email',
+        'birth_date' => 'Birth Date',
+        'gender' => 'Gender',
+        'player_code' => 'Player Code',
+        'branch' => 'Branch',
+        'academy' => 'Academy',
+        'nationality' => 'Nationality',
+        'sport' => 'Sport',
+        'shirt_size' => 'Shirt Size',
+        'shorts_size' => 'Shorts Size',
+        'shoe_size' => 'Shoe Size',
+        'guardian_name' => 'Guardian Name',
+        'guardian_phone' => 'Guardian Phone',
+        'previous_school' => 'Previous School',
+        'previous_academy' => 'Previous Academy',
+        'medical_notes' => 'Medical Notes',
+        'remarks' => 'Remarks',
+        'level' => 'Level',
+        'position' => 'Position',
+        'created_at' => 'Join Date',
+        'full_name' => 'Full Name',
+        'password' => 'Password',
+        'confirm_password' => 'Confirm Password',
+        'code' => 'Player Code',
+        'actions' => 'Actions',
+        'male' => 'Male',
+        'female' => 'Female',
+        'system' => 'System',
+        'programs' => 'Programs',
+        'leave_blank' => 'Leave blank if not applicable',
+        'total_price' => 'Amount',
+        'payment_date' => 'Payment Date',
+        'start_date' => 'Start Date',
+        'end_date' => 'End Date',
+        'status' => 'Status',
+        'status_student' => 'Student Status',
+        'discount' => 'Discount',
+        'reset_number' => 'Receipt Number',
+        'note' => 'Note',
+        'class_time_from' => 'Class Time From',
+        'class_time_to' => 'To',
+        'receipt_file' => 'Receipt File',
+        'payment_status' => 'Payment Status',
+        'payment_start_date' => 'Payment Start Date',
+        'payment_end_date' => 'Payment End Date',
+    ],
+
+    'actions' => [
+        'search' => 'Search',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'view' => 'View',
+        'select' => 'Select',
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'generate' => 'Generate',
+        'update' => 'Update',
+        'back' => 'Back',
+        'assign_program' => 'Assign Program',
+        'assign' => 'Assign',
+        'add_payment' => 'Add Payment',
+        'view_player' => 'View Player',
+        'select' => 'Select',
+        'error_loading' => 'Error loading data, please try again later.',
+        'loading' => 'Loading...',
+          'export_excel' => 'Export to Excel',
+           'scan_card' => 'Scan Card',
+    ],
+
+    'hints' => [
+        'leave_blank_to_keep' => 'Leave blank to keep the current value',
+    ],
+
+    'placeholders' => [
+        'previous_school' => 'Enter previous school name',
+        'previous_academy' => 'Enter previous academy name',
+    ],
+
+    'messages' => [
+        'confirm_delete_title' => 'Are you sure?',
+        'confirm_delete_text' => 'This action cannot be undone!',
+        'yes_delete' => 'Yes, delete it!',
+        'cancel' => 'Cancel',
+        'player_created_successfully' => 'Player created successfully.',
+        'player_updated_successfully' => 'Player updated successfully.',
+        'player_deleted_successfully' => 'Player deleted successfully.',
+        'no_payments' => 'No payments found.',
+        'payment_created_successfully' => 'Payment created successfully.',
+        'something_went_wrong' => 'Whoops! Something went wrong.',
+        'success' => 'Success!',
+        'payment_updated_successfully' => 'Payment updated successfully.',
+    ],
+
+    'positions_groups' => [
+        'football' => 'Football (Soccer)',
+        'basketball' => 'Basketball',
+        'volleyball' => 'Volleyball',
+        'other' => 'Other',
+    ],
+
+    'positions' => [
+        // Football
+        'goalkeeper' => 'Goalkeeper',
+        'defender' => 'Defender',
+        'midfielder' => 'Midfielder',
+        'forward' => 'Forward',
+
+        // Basketball
+        'point_guard' => 'Point Guard',
+        'shooting_guard' => 'Shooting Guard',
+        'small_forward' => 'Small Forward',
+        'power_forward' => 'Power Forward',
+        'center' => 'Center',
+
+        // Volleyball
+        'outside_hitter' => 'Outside Hitter',
+        'middle_blocker' => 'Middle Blocker',
+        'setter' => 'Setter',
+        'opposite_hitter' => 'Opposite Hitter',
+        'libero' => 'Libero',
+
+        // Other
+        'all_rounder' => 'All-rounder',
+        'utility' => 'Utility',
+    ],
+
+    'levels' => [
+        'beginner' => 'Beginner',
+        'intermediate' => 'Intermediate',
+        'advanced' => 'Advanced',
+    ],
+
+    'sections' => [
+        'basic_info' => 'Basic Information',
+        'details' => 'Uniform & Guardian Details',
+        'additional' => 'Extra Information',
+        'payments' => 'Payments',
+    ],
+
+];
