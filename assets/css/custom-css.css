@@ -1,0 +1,54 @@
+.brand-logo , .brand-logo:hover{
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+#kt_header_mobile a,a:hover{
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.breadcrumb{
+    list-style-type: none !important;
+}
+
+.breadcrumb .breadcrumb-item a{
+    text-decoration: none !important;
+    color: var(--bs-secondary-color) !important;
+}
+.breadcrumb .breadcrumb-item a:hover{
+    text-decoration: none !important;
+    color: var(--bs-secondary-color) !important;
+}
+.breadcrumb .breadcrumb-item li{
+    text-decoration: none !important;
+    color: var(--bs-secondary-color) !important;
+}
+
+.navi-hover li a , a:hover{
+    text-decoration: none !important;
+}
+.select2-container--default .select2-selection--single {
+    height: 40px !important;       /* Match button/input height */
+    padding: 6px 12px !important;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: normal !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    top: 0 !important;
+}
+
+.event-action-menu {
+    border-radius: 4px;
+}
