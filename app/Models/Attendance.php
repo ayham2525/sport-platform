@@ -5,7 +5,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
-    protected $fillable = ['user_id', 'player_id', 'branch', 'scanned_at'];
+
+     const MODEL_NAME = 'Attendance';
+    protected $fillable = ['user_id', 'player_id', 'branch_id', 'scanned_at'];
 
     public function user() {
         return $this->belongsTo(User::class);
@@ -13,5 +15,10 @@ class Attendance extends Model
 
     public function player() {
         return $this->belongsTo(Player::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

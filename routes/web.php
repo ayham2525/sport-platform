@@ -24,6 +24,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BranchItemController;
 use App\Http\Controllers\ClassModelController;
@@ -114,6 +115,11 @@ Route::middleware(['web'])->group(function () {
 
             // 🔹 Sports Management
             Route::resource('sports', SportController::class);
+
+            // 🔹 Attendance Management
+            Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+            Route::resource('attendance', AttendanceController::class);
+
 
 
             // 🔹 Location Data
@@ -217,6 +223,8 @@ Route::middleware(['web'])->group(function () {
             Route::post('/convert-currency', [AjaxController::class, 'convertCurrency'])->name('ajax.convert-currency');
             Route::get('/get-players-by-branch/{branch_id}', [AjaxController::class, 'getPlayersByBranch']);
             Route::get('/get-items-by-system/{system_id}', [AjaxController::class, 'getItemsBySystem']);
+            Route::get('/get-users-by-branch/{branch_id}', [AjaxController::class, 'getUsersByBranch'])->name('getUsersByBranch');
+
 
         });
 });

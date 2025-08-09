@@ -71,4 +71,17 @@ class Branch extends Model
             ->withPivot(['min_value', 'max_value', 'notes', 'is_professional'])
             ->withTimestamps();
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function getTranslatedNameAttribute()
+    {
+        $locale = app()->getLocale();
+        $field = 'name_' . $locale;
+
+        return $this->$field ?? $this->name;
+    }
 }

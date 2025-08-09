@@ -135,7 +135,7 @@
                 </table>
 
                 <div class="mt-4">
-                    {{ $academies->withQueryString()->links() }}
+                    {{ $academies->withQueryString()->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         </div>
