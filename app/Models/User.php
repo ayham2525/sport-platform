@@ -117,5 +117,10 @@ class User extends Authenticatable
         });
     }
 
+    public function scopeCoach($query)
+    {
+        return $query->where('role', 'coach');
+    }
+
 
 }

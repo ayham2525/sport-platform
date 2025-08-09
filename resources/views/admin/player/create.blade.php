@@ -347,8 +347,15 @@
 @php
 $user = auth()->user();
 @endphp
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    $('.select2').select2();
+});
+</script>
 
 <script>
+
     function generatePlayerCode() {
         const prefix = 'PLY-';
         const random = Math.floor(Math.random() * 900000 + 100000);

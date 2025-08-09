@@ -123,4 +123,14 @@ class AjaxController extends Controller
             ->select('id', "$column as name" , 'price', 'currency')
             ->get();
     }
+
+    public function getUsersByBranch($branch_id)
+    {
+        $users = User::where('branch_id', $branch_id)
+            ->whereIn('role', ['coach', 'player'])
+            ->select('id', 'name', 'role')
+            ->get();
+
+        return response()->json($users);
+    }
 }

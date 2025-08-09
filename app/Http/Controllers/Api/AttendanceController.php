@@ -31,7 +31,7 @@ class AttendanceController extends Controller
         Attendance::create([
             'user_id'   => $user->id,
             'player_id' => $player?->id,
-            'branch'    => $user->branch_id ?? null,
+            'branch_id'    => $user->branch_id ?? null,
             'scanned_at'=> now(),
         ]);
 
