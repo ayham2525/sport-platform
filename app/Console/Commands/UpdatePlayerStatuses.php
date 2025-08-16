@@ -12,8 +12,8 @@ Artisan::command('inspire', function () {
 
 /**
  * players:update-status
- * Active  = player HAS at least one payment with end_date >= today
- * Expired = player has NO payments with end_date >= today
+ * Active  = player HAS at least one payment with end_date >= NOW()
+ * Expired = player has NO payments with end_date >= NOW()
  * Optional: --branch_id=123 to scope updates to one branch
  */
 Artisan::command('players:update-status {--branch_id=}', function () {
@@ -31,7 +31,7 @@ Artisan::command('players:update-status {--branch_id=}', function () {
             FROM payments pay
             WHERE pay.player_id = p.id
               AND pay.end_date IS NOT NULL
-              AND DATE(pay.end_date) >= CURDATE()
+              AND pay.end_date >= NOW()
           )
     ", $bindings);
 
@@ -45,7 +45,7 @@ Artisan::command('players:update-status {--branch_id=}', function () {
             FROM payments pay
             WHERE pay.player_id = p.id
               AND pay.end_date IS NOT NULL
-              AND DATE(pay.end_date) >= CURDATE()
+              AND pay.end_date >= NOW()
           )
     ", $bindings);
 
@@ -61,5 +61,5 @@ Artisan::command('players:update-status {--branch_id=}', function () {
     }
 })->purpose('Update player statuses');
 
-// Run it daily at 11:43 (server time)
-Schedule::command('players:update-status')->dailyAt('11:51');
+// Run it hourly at minute 50
+Schedule::command('players:update-status')->hourlyAt(58);
