@@ -185,24 +185,37 @@ public function store(Request $request)
         'amount'         => 'required|numeric|min:0',
         'currency_id'    => 'required|exists:currencies,id',
         'notes'          => 'nullable|string',
-        'status'         => ['required', Rule::in(array_keys(UniformRequest::STATUS_OPTIONS))],
+        'status'         => ['nullable', Rule::in(array_keys(UniformRequest::STATUS_OPTIONS))],
         'branch_status'  => ['nullable', Rule::in(array_keys(UniformRequest::BRANCH_STATUS_OPTIONS))],
         'office_status'  => ['nullable', Rule::in(array_keys(UniformRequest::OFFICE_STATUS_OPTIONS))],
         'payment_method' => 'nullable|string|max:256',
     ]);
 
-     $validated['branch_status'] = $validated['branch_status'] ?? 'requested';
+    // apply defaults if not provided
+    $validated['status']        = $validated['status']        ?? 'requested';
+    $validated['branch_status'] = $validated['branch_status'] ?? 'requested';
     $validated['office_status'] = $validated['office_status'] ?? 'pending';
 
+    $validated['requested_at']  = now();
+    $validated['request_date']  = now();
 
-    $validated['requested_at'] = now();
-    $validated['request_date'] = now();
+    // fetch user_id from the player
+    $player = Player::findOrFail($validated['player_id']);
+    $validated['user_id'] = $player->user_id;
 
     UniformRequest::create($validated);
 
-    return redirect()->route('admin.uniform-requests.index')
+
+
+    return redirect()
+        ->route('admin.players.show', $player->id)
         ->with('success', __('uniform_requests.created_successfully'));
+
+
+
 }
+
+
 
 
    public function edit($id)
@@ -315,21 +328,20 @@ public function store(Request $request)
             ->with('success', __('uniform_requests.updated_successfully'));
     }
 
-    public function destroy($id, Request $request)
-    {
-        if (!PermissionHelper::hasPermission('delete', UniformRequest::MODEL_NAME)) {
-            return response()->json(['message' => __('uniform_requests.unauthorized')], 403);
-        }
-
-        $uniformRequest = UniformRequest::findOrFail($id);
-        $uniformRequest->delete();
-
-        if ($request->ajax()) {
-            return response()->json(['message' => __('uniform_requests.deleted_successfully')]);
-        }
-
-        return redirect()->route('admin.uniform-requests.index')
-            ->with('success', __('uniform_requests.deleted_successfully'));
+   public function destroy($id)
+{
+    if (!PermissionHelper::hasPermission('delete', UniformRequest::MODEL_NAME)) {
+        abort(403, __('uniform_requests.unauthorized'));
     }
+
+    $uniformRequest = UniformRequest::findOrFail($id);
+    $playerId = $uniformRequest->player_id; // store before delete
+    $uniformRequest->delete();
+
+    return redirect()
+        ->route('admin.players.show', $playerId)
+        ->with('success', __('uniform_requests.deleted_successfully'));
+}
+
 
 }

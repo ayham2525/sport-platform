@@ -171,69 +171,77 @@
     <div class="card-body">
         @if(($uniformRequests ?? collect())->count())
             <div class="table-responsive">
-                <table class="table table-bordered table-hover table-nowrap">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>#</th>
-                            <th>{{ __('uniform_requests.fields.item') }}</th>
-                            <th>{{ __('uniform_requests.fields.size') }}</th>
-                            <th>{{ __('uniform_requests.fields.color') }}</th>
-                            <th>{{ __('uniform_requests.fields.quantity') }}</th>
-                            <th>{{ __('uniform_requests.fields.amount') }}</th>
-                            <th>{{ __('uniform_requests.fields.currency') }}</th>
-                            <th>{{ __('uniform_requests.fields.status') }}</th>
-                            <th>{{ __('uniform_requests.fields.branch_status') }}</th>
-                            <th>{{ __('uniform_requests.fields.office_status') }}</th>
-                            <th>{{ __('uniform_requests.fields.payment_method') }}</th>
-                            <th>{{ __('uniform_requests.fields.request_date') }}</th>
-                            <th>{{ __('uniform_requests.fields.approved_at') }}</th>
-                            <th>{{ __('uniform_requests.fields.ordered_at') }}</th>
-                            <th>{{ __('uniform_requests.fields.delivered_at') }}</th>
-                            <th>{{ __('uniform_requests.fields.notes') }}</th>
-                            <th>{{ __('player.fields.actions') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($uniformRequests as $i => $req)
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>{{ optional($req->item)->{app()->getLocale() === 'ar' ? 'name_ar' : 'name_en'} ?? '-' }}</td>
-                                <td>{{ $req->size ?? '-' }}</td>
-                                <td>
-                                    @php $color = $req->color ?: '#cccccc'; @endphp
-                                    <span class="d-inline-block rounded" style="width:20px;height:20px;background: {{ $color }}; border: 1px solid #ddd;"></span>
-                                    <small class="text-muted ml-1">{{ $color }}</small>
-                                </td>
-                                <td>{{ $req->quantity }}</td>
-                                <td>{{ number_format((float)$req->amount, 2) }}</td>
-                                <td>{{ optional($req->currency)->code ?? '-' }}</td>
-                                <td>{{ $req->status_label }}</td>
-                                <td>{{ $req->branch_status_label }}</td>
-                                <td>{{ $req->office_status_label }}</td>
-                                <td>{{ $req->payment_method ?? '-' }}</td>
-                                <td>{{ optional($req->request_date)->format('Y-m-d') }}</td>
-                                <td>{{ optional($req->approved_at)->format('Y-m-d H:i') }}</td>
-                                <td>{{ optional($req->ordered_at)->format('Y-m-d H:i') }}</td>
-                                <td>{{ optional($req->delivered_at)->format('Y-m-d H:i') }}</td>
-                                <td>{{ $req->notes }}</td>
-                                <td>
-                                    <a href="{{ route('admin.uniform-requests.edit', $req->id) }}"
-                                       class="btn btn-sm btn-clean text-primary"
-                                       title="{{ __('player.actions.edit') }}">
-                                        <i class="la la-edit"></i>
-                                    </a>
-                                    {{-- (optional) view page if you have it:
-                                    <a href="{{ route('admin.uniform-requests.show', $req->id) }}"
-                                       class="btn btn-sm btn-clean text-info"
-                                       title="{{ __('player.actions.view') }}">
-                                       <i class="la la-eye"></i>
-                                    </a>
-                                    --}}
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+               <table class="table table-bordered table-hover table-nowrap">
+    <thead class="thead-light">
+        <tr>
+            <th>#</th>
+            <th>{{ __('uniform_requests.fields.item') }}</th>
+            <th>{{ __('uniform_requests.fields.size') }}</th>
+            <th>{{ __('uniform_requests.fields.color') }}</th>
+            <th>{{ __('uniform_requests.fields.quantity') }}</th>
+            <th>{{ __('uniform_requests.fields.amount') }}</th>
+            <th>{{ __('uniform_requests.fields.currency') }}</th>
+            <th>{{ __('uniform_requests.fields.status') }}</th>
+            <th>{{ __('uniform_requests.fields.branch_status') }}</th>
+            <th>{{ __('uniform_requests.fields.office_status') }}</th>
+            <th>{{ __('uniform_requests.fields.payment_method') }}</th>
+            <th>{{ __('uniform_requests.fields.request_date') }}</th>
+            <th>{{ __('uniform_requests.fields.approved_at') }}</th>
+            <th>{{ __('uniform_requests.fields.ordered_at') }}</th>
+            <th>{{ __('uniform_requests.fields.delivered_at') }}</th>
+            <th>{{ __('uniform_requests.fields.notes') }}</th>
+            <th>{{ __('player.fields.actions') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($uniformRequests as $i => $req)
+            <tr>
+                <td>{{ $i + 1 }}</td>
+                <td>{{ optional($req->item)->{app()->getLocale() === 'ar' ? 'name_ar' : 'name_en'} ?? '-' }}</td>
+                <td>{{ $req->size ?? '-' }}</td>
+                <td>
+                    @php $color = $req->color ?: '#cccccc'; @endphp
+                    <span class="d-inline-block rounded" style="width:20px;height:20px;background: {{ $color }}; border: 1px solid #ddd;"></span>
+                    <small class="text-muted ml-1">{{ $color }}</small>
+                </td>
+                <td>{{ $req->quantity }}</td>
+                <td>{{ number_format((float)$req->amount, 2) }}</td>
+                <td>{{ optional($req->currency)->code ?? '-' }}</td>
+                <td>{{ $req->status_label }}</td>
+                <td>{{ $req->branch_status_label }}</td>
+                <td>{{ $req->office_status_label }}</td>
+                <td>{{ $req->payment_method ?? '-' }}</td>
+                <td>{{ optional($req->request_date)->format('Y-m-d') }}</td>
+                <td>{{ optional($req->approved_at)->format('Y-m-d H:i') }}</td>
+                <td>{{ optional($req->ordered_at)->format('Y-m-d H:i') }}</td>
+                <td>{{ optional($req->delivered_at)->format('Y-m-d H:i') }}</td>
+                <td>{{ $req->notes }}</td>
+                <td>
+                    <a href="{{ route('admin.uniform-requests.edit', $req->id) }}"
+                       class="btn btn-sm btn-clean text-primary"
+                       title="{{ __('player.actions.edit') }}">
+                        <i class="la la-edit"></i>
+                    </a>
+
+                    <button type="button"
+                            class="btn btn-sm btn-clean text-danger delete-uniform-btn"
+                            data-id="{{ $req->id }}"
+                            title="{{ __('player.actions.delete') }}">
+                        <i class="la la-trash"></i>
+                    </button>
+
+                    <form id="delete-form-{{ $req->id }}"
+                          action="{{ route('admin.uniform-requests.destroy', $req->id) }}"
+                          method="POST" style="display:none;">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
             </div>
         @else
             <p class="text-muted mb-0">{{ __('uniform_requests.messages.no_requests') }}</p>
@@ -396,6 +404,28 @@
 
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.delete-uniform-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.dataset.id;
+
+            Swal.fire({
+                title: "{{ __('messages.confirm_delete_title') }}",
+                text: "{{ __('messages.confirm_delete_text') }}",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "{{ __('messages.yes_delete') }}",
+                cancelButtonText: "{{ __('messages.cancel') }}"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        });
+    });
+});
         function formatDate(dateStr) {
             if (!dateStr) return '';
             const date = new Date(dateStr);
