@@ -9,10 +9,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// This inline command is just a demo placeholder (can be removed if using UpdatePlayerStatuses class)
-Artisan::command('players:update-status', function () {
-    $this->info('Statuses updated.');
-})->purpose('Update player statuses');
 
 // ✅ Correct way: pass the class name using ::class
-Schedule::command(UpdatePlayerStatuses::class)->hourlyAt(14);
+Schedule::command(UpdatePlayerStatuses::class)->hourlyAt(20);
