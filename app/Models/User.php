@@ -24,7 +24,7 @@ class User extends Authenticatable
         'academy_id', // stored as JSON
         'email_verified_at',
         'remember_token',
-        'serial_number'
+        'card_serial_number'
     ];
 
     protected $hidden = [

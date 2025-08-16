@@ -308,34 +308,46 @@ class PlayerController extends Controller
 
 
 
-    public function show(Player $player)
-    {
-        if (!PermissionHelper::hasPermission('view', Player::MODEL_NAME)) {
-            return PermissionHelper::denyAccessResponse();
-        }
-        // Make sure branch and system exist to avoid null errors
-        $systemId = optional($player->branch)->system_id;
+    // app/Http/Controllers/PlayerController.php
 
-        $items = [];
-        if ($systemId) {
-            $items = Item::where('system_id', $systemId)
-                ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id')
-                ->toArray(); // Important: ensure it's an array
-        }
-
-        $currencies = Currency::all();
-
-        $player->load([
-            'user',
-            'branch',
-            'academy',
-            'nationality',
-            'sport',
-            'payments.branch',
-        ]);
-
-        return view('admin.player.show', compact('player', 'items', 'currencies'));
+public function show(Player $player)
+{
+    if (!PermissionHelper::hasPermission('view', Player::MODEL_NAME)) {
+        return PermissionHelper::denyAccessResponse();
     }
+
+    $systemId = optional($player->branch)->system_id;
+
+    $items = [];
+    if ($systemId) {
+        $items = Item::where('system_id', $systemId)
+            ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id')
+            ->toArray();
+    }
+
+    $currencies = Currency::all();
+
+    $player->load([
+        'user',
+        'branch',
+        'academy',
+        'nationality',
+        'sport',
+        'payments.branch',
+        'payments.paymentMethod',
+        'uniformRequests.item',
+        'uniformRequests.currency',
+    ]);
+
+    // If you prefer a sorted collection in the view:
+    $uniformRequests = $player->uniformRequests()
+        ->with(['item', 'currency'])
+        ->orderByDesc('created_at')
+        ->get();
+
+    return view('admin.player.show', compact('player', 'items', 'currencies', 'uniformRequests'));
+}
+
 
 
 
@@ -343,6 +355,8 @@ class PlayerController extends Controller
 
     public function edit(Player $player)
     {
+
+         // dd($player);
         // Check update permission
         if (!PermissionHelper::hasPermission('update', Player::MODEL_NAME)) {
             return PermissionHelper::denyAccessResponse();

@@ -8,6 +8,7 @@ return [
     'management' => 'Branch Management',
     'create_title' => 'Add New Branch',
     'new_branch' => 'New Branch',
+    'all' => 'All',
 
     // Form Labels
     'name' => 'Branch Name',

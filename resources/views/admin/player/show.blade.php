@@ -1,5 +1,17 @@
 @extends('layouts.app')
-
+<style>
+    .table-nowrap td,
+    .table-nowrap th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .table-nowrap td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px; /* adjust as needed */
+        font-size: 12px
+    }
+</style>
 @section('page_title')
     <h5 class="text-dark font-weight-bold my-2 mr-5">
         <i class="fas fa-user text-info mr-1"></i> {{ __('player.titles.view_player') }}
@@ -144,6 +156,92 @@
             </div>
         </div>
 
+        {{-- Uniform Requests --}}
+<div class="card mb-4">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-white text-gray-800">
+        <div>
+            <i class="la la-tshirt mr-1 text-primary"></i>
+            <strong>{{ __('uniform_requests.titles.uniform_requests') }}</strong>
+        </div>
+        <a href="javascript:void(0)" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addUniformModal">
+            <i class="la la-plus-circle"></i> {{ __('uniform_requests.actions.add') }}
+        </a>
+    </div>
+
+    <div class="card-body">
+        @if(($uniformRequests ?? collect())->count())
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-nowrap">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>{{ __('uniform_requests.fields.item') }}</th>
+                            <th>{{ __('uniform_requests.fields.size') }}</th>
+                            <th>{{ __('uniform_requests.fields.color') }}</th>
+                            <th>{{ __('uniform_requests.fields.quantity') }}</th>
+                            <th>{{ __('uniform_requests.fields.amount') }}</th>
+                            <th>{{ __('uniform_requests.fields.currency') }}</th>
+                            <th>{{ __('uniform_requests.fields.status') }}</th>
+                            <th>{{ __('uniform_requests.fields.branch_status') }}</th>
+                            <th>{{ __('uniform_requests.fields.office_status') }}</th>
+                            <th>{{ __('uniform_requests.fields.payment_method') }}</th>
+                            <th>{{ __('uniform_requests.fields.request_date') }}</th>
+                            <th>{{ __('uniform_requests.fields.approved_at') }}</th>
+                            <th>{{ __('uniform_requests.fields.ordered_at') }}</th>
+                            <th>{{ __('uniform_requests.fields.delivered_at') }}</th>
+                            <th>{{ __('uniform_requests.fields.notes') }}</th>
+                            <th>{{ __('player.fields.actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($uniformRequests as $i => $req)
+                            <tr>
+                                <td>{{ $i + 1 }}</td>
+                                <td>{{ optional($req->item)->{app()->getLocale() === 'ar' ? 'name_ar' : 'name_en'} ?? '-' }}</td>
+                                <td>{{ $req->size ?? '-' }}</td>
+                                <td>
+                                    @php $color = $req->color ?: '#cccccc'; @endphp
+                                    <span class="d-inline-block rounded" style="width:20px;height:20px;background: {{ $color }}; border: 1px solid #ddd;"></span>
+                                    <small class="text-muted ml-1">{{ $color }}</small>
+                                </td>
+                                <td>{{ $req->quantity }}</td>
+                                <td>{{ number_format((float)$req->amount, 2) }}</td>
+                                <td>{{ optional($req->currency)->code ?? '-' }}</td>
+                                <td>{{ $req->status_label }}</td>
+                                <td>{{ $req->branch_status_label }}</td>
+                                <td>{{ $req->office_status_label }}</td>
+                                <td>{{ $req->payment_method ?? '-' }}</td>
+                                <td>{{ optional($req->request_date)->format('Y-m-d') }}</td>
+                                <td>{{ optional($req->approved_at)->format('Y-m-d H:i') }}</td>
+                                <td>{{ optional($req->ordered_at)->format('Y-m-d H:i') }}</td>
+                                <td>{{ optional($req->delivered_at)->format('Y-m-d H:i') }}</td>
+                                <td>{{ $req->notes }}</td>
+                                <td>
+                                    <a href="{{ route('admin.uniform-requests.edit', $req->id) }}"
+                                       class="btn btn-sm btn-clean text-primary"
+                                       title="{{ __('player.actions.edit') }}">
+                                        <i class="la la-edit"></i>
+                                    </a>
+                                    {{-- (optional) view page if you have it:
+                                    <a href="{{ route('admin.uniform-requests.show', $req->id) }}"
+                                       class="btn btn-sm btn-clean text-info"
+                                       title="{{ __('player.actions.view') }}">
+                                       <i class="la la-eye"></i>
+                                    </a>
+                                    --}}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-muted mb-0">{{ __('uniform_requests.messages.no_requests') }}</p>
+        @endif
+    </div>
+</div>
+
+
 
 
         {{-- Uniform Requests --}}
@@ -226,21 +324,20 @@
     {{-- Payments --}}
     <div class="card mb-4">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-white text-gray-800">
+
+              <div>
             <i class="la la-money-bill-wave mr-1 text-success"></i>
             <strong>{{ __('player.sections.payments') }}</strong>
+        </div>
             <a href="javascript:void(0)" class="btn btn-sm btn-success" data-toggle="modal" data-target="#paymentModal">
                 <i class="la la-plus-circle"></i> {{ __('player.actions.add_payment') }}
             </a>
-            <i class="la la-tshirt mr-1 text-primary"></i>
-        <strong>{{ __('uniform_requests.titles.uniform_requests') }}</strong>
-        <a href="javascript:void(0)" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addUniformModal">
-            <i class="la la-plus-circle"></i> {{ __('uniform_requests.actions.add') }}
-        </a>
+
         </div>
         <div class="card-body">
             @if ($player->payments->count())
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover table-nowrap">
                         <thead class="thead-light">
                             <tr>
                                 <th>#</th>
@@ -252,7 +349,7 @@
                                 <th>{{ __('player.fields.end_date') }}</th>
                                 <th>{{ __('player.fields.discount') }}</th>
                                 <th>{{ __('player.fields.reset_number') }}</th>
-                                <th>{{ __('player.fields.system') }}</th>
+                                <th>{{ __('player.fields.payment_method') }}</th>
                                 <th>{{ __('player.fields.actions') }}</th>
                             </tr>
                         </thead>

@@ -1,5 +1,5 @@
 @php use App\Helpers\PermissionHelper; @endphp
-<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+<div class="table-responsive table-nowrap" style=" overflow-y: auto;">
     <table class="table table-bordered table-hover">
         <thead class="thead-light">
             <tr>
@@ -15,7 +15,7 @@
                 <th>{{ __('player.fields.payment_start_date')}}</th>
                 <th>{{ __('player.fields.payment_end_date')}}</th>
                 <th>{{ __('player.fields.payment_status')}}</th>
-
+                <th>{{ __('player.fields.card_serial_number')}}</th>
                 <th>{{ __('player.fields.actions') }}</th>
             </tr>
         </thead>
@@ -64,6 +64,7 @@
 
                     {!! $statusIcon !!} <span class="ml-1">{{ $statusText }}</span>
                 </td>
+                <td>{{ $player->user->card_serial_number}}</td>
 
                 <td nowrap>
                     @if (PermissionHelper::hasPermission('update', App\Models\Player::MODEL_NAME))

@@ -8,6 +8,7 @@ return [
     'management' => 'إدارة الفروع',
     'create_title' => 'إضافة فرع جديد',
     'new_branch' => 'فرع جديد',
+    'all' => 'الكل',
 
     // Form Labels
     'name' => 'اسم الفرع',

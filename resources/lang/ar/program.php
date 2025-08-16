@@ -1,6 +1,7 @@
 <?php
 
 return [
+     'title' => 'البرنامج',
     'titles' => [
         'programs' => 'البرامج',
         'dashboard' => 'لوحة التحكم',

@@ -14,61 +14,71 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
- public function index(Request $request)
+public function index(Request $request)
 {
     $user = auth()->user();
+
     $query = Attendance::with(['user', 'player', 'branch']);
 
     switch ($user->role) {
         case 'full_admin':
-            $query->whereHas('user', fn($q) =>
-                $user->system_id ? $q->where('system_id', $user->system_id) : $q
-            );
+            // No scoping for full_admin
             break;
-        case 'branch_admin':
-            $query->whereHas('user', fn($q) =>
-                $user->branch_id ? $q->where('branch_id', $user->branch_id) : $q
-            );
-            break;
-        case 'academy_admin':
-            $academyIds = is_array($user->academy_id)
-                ? $user->academy_id
-                : json_decode($user->academy_id, true);
 
-            $query->whereHas('player', fn($q) =>
-                $academyIds ? $q->whereIn('academy_id', $academyIds) : $q
-            );
+        case 'system_admin': // include if you use this role
+            if ($user->system_id) {
+                $query->whereHas('user', fn ($q) => $q->where('system_id', $user->system_id));
+            }
             break;
+
+        case 'branch_admin':
+            if ($user->branch_id) {
+                $query->whereHas('user', fn ($q) => $q->where('branch_id', $user->branch_id));
+            }
+            break;
+
+        case 'academy_admin':
+            // academy_id may be int, JSON array, or array
+            $academyIds = $user->academy_id;
+            if (is_string($academyIds)) {
+                $decoded = json_decode($academyIds, true);
+                $academyIds = is_array($decoded) ? $decoded : (strlen($academyIds) ? [$academyIds] : []);
+            } elseif (is_int($academyIds)) {
+                $academyIds = [$academyIds];
+            } elseif (!is_array($academyIds)) {
+                $academyIds = [];
+            }
+
+            if (!empty($academyIds)) {
+                $query->whereHas('player', fn ($q) => $q->whereIn('academy_id', $academyIds));
+            }
+            break;
+
         case 'player':
             $query->where('user_id', $user->id);
             break;
+
         default:
             abort(403);
     }
 
-    // 🔹 Set default start and end date to current month
-    $startDate = $request->start_date ?? now()->startOfMonth()->toDateString();
-    $endDate = $request->end_date ?? now()->endOfMonth()->toDateString();
+    // Default date range = current month, and always apply it
+    $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+    $endDate   = $request->input('end_date',   now()->endOfMonth()->toDateString());
 
-    // 🔹 Apply date filters
-    $query->when($request->filled('start_date'), fn($q) =>
-        $q->whereDate('scanned_at', '>=', $request->start_date)
-    );
-    $query->when($request->filled('end_date'), fn($q) =>
-        $q->whereDate('scanned_at', '<=', $request->end_date)
-    );
+    $query->whereDate('scanned_at', '>=', $startDate)
+          ->whereDate('scanned_at', '<=', $endDate);
 
-    // 🔹 Filter by role
+    // Optional: filter by role of the related user
     if ($request->filled('role')) {
-        $query->whereHas('user', fn($q) =>
-            $q->where('role', $request->role)
-        );
+        $query->whereHas('user', fn ($q) => $q->where('role', $request->role));
     }
 
     $attendances = $query->latest()->paginate(20);
 
     return view('admin.attendance.index', compact('attendances', 'startDate', 'endDate'));
 }
+
 
 
     public function create()

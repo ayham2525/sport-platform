@@ -1,7 +1,7 @@
 @php use App\Helpers\PermissionHelper; @endphp
 <div class="aside aside-left aside-fixed d-flex flex-column flex-row-auto" id="kt_aside">
     <div class="brand flex-column-auto" id="kt_brand">
-        <a href="#" class="brand-logo">
+        <a href="{{ route('admin.dashboard') }}" class="brand-logo">
             GSC UAE
         </a>
         <button class="brand-toggle btn btn-sm px-0" id="kt_aside_toggle">
@@ -20,7 +20,7 @@
         <div id="kt_aside_menu" class="aside-menu my-4" data-menu-vertical="1" data-menu-scroll="1" data-menu-dropdown-timeout="500">
             <ul class="menu-nav">
                 <li class="menu-item menu-item-active" aria-haspopup="true">
-                    <a href="#" class="menu-link">
+                    <a href="{{ route('admin.dashboard') }}" class="menu-link">
                         <span class="svg-icon menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                                 <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -30,60 +30,14 @@
                                 </g>
                             </svg>
                         </span>
-                        <span class="menu-text">Dashboard</span>
+                        <span class="menu-text">{{ __('systems.dashboard') }}</span>
                     </a>
                 </li>
                 <li class="menu-section">
                     <h4 class="menu-text">Custom</h4>
                     <i class="menu-icon ki ki-bold-more-hor icon-md"></i>
                 </li>
-                <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-                    <a href="javascript:;" class="menu-link menu-toggle">
-                        <span class="svg-icon menu-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <rect fill="#000000" x="4" y="4" width="7" height="7" rx="1.5" />
-                                    <path d="M5.5,13 L9.5,13 C10.3284271,13 11,13.6715729 11,14.5 L11,18.5 C11,19.3284271 10.3284271,20 9.5,20 L5.5,20 C4.67157288,20 4,19.3284271 4,18.5 L4,14.5 C4,13.6715729 4.67157288,13 5.5,13 Z M14.5,4 L18.5,4 C19.3284271,4 20,4.67157288 20,5.5 L20,9.5 C20,10.3284271 19.3284271,11 18.5,11 L14.5,11 C13.6715729,11 13,10.3284271 13,9.5 L13,5.5 C13,4.67157288 13.6715729,4 14.5,4 Z M14.5,13 L18.5,13 C19.3284271,13 20,13.6715729 20,14.5 L20,18.5 C20,19.3284271 19.3284271,20 18.5,20 L14.5,20 C13.6715729,20 13,19.3284271 13,18.5 L13,14.5 C13,13.6715729 13.6715729,13 14.5,13 Z" fill="#000000" opacity="0.3" />
-                                </g>
-                            </svg>
-                        </span>
-                        <span class="menu-text">Applications</span>
-                        <i class="menu-arrow"></i>
-                    </a>
-                    <div class="menu-submenu">
-                        <i class="menu-arrow"></i>
-                        <ul class="menu-subnav">
-                            <li class="menu-item menu-item-parent" aria-haspopup="true">
-                                <span class="menu-link">
-                                    <span class="menu-text">Applications</span>
-                                </span>
-                            </li>
-                            <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-                                <a href="javascript:;" class="menu-link menu-toggle">
-                                    <i class="menu-bullet menu-bullet-line">
-                                        <span></span>
-                                    </i>
-                                    <span class="menu-text">Users</span>
-                                    <i class="menu-arrow"></i>
-                                </a>
-                                <div class="menu-submenu">
-                                    <i class="menu-arrow"></i>
-                                    <ul class="menu-subnav">
-                                        <li class="menu-item" aria-haspopup="true">
-                                            <a href="custom/apps/user/list-default.html" class="menu-link">
-                                                <i class="menu-bullet menu-bullet-dot">
-                                                    <span></span>
-                                                </i>
-                                                <span class="menu-text">List - Default</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+
                 <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
     <a href="javascript:;" class="menu-link menu-toggle">
         <span class="svg-icon menu-icon">
@@ -280,6 +234,66 @@
     </div>
 </li>
 @endif
+
+@php
+    $user = auth()->user();
+@endphp
+
+{{-- Attendance (top-level, outside Reports) --}}
+<li class="menu-item {{ request()->routeIs('admin.attendance.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+    <a href="{{ route('admin.attendance.index') }}" class="menu-link">
+        <span class="menu-icon"><i class="la la-calendar-check"></i></span>
+        <span class="menu-text">{{ __('attendance.title') }}</span>
+    </a>
+</li>
+
+@if (in_array($user->role, ['full_admin', 'system_admin']))
+<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+    <a href="javascript:;" class="menu-link menu-toggle">
+        <span class="svg-icon menu-icon">
+            <!-- Reports Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                <g fill="none" fill-rule="evenodd">
+                    <rect width="24" height="24"/>
+                    <path d="M5,3 L19,3 C20.1045695,3 21,3.8954305 21,5 L21,19 C21,20.1045695 20.1045695,21 19,21 L5,21 C3.8954305,21 3,20.1045695 3,19 L3,5 C3,3.8954305 3.8954305,3 5,3 Z M5,5 L5,19 L19,19 L19,5 L5,5 Z" fill="#000000"/>
+                    <rect fill="#000000" opacity="0.3" x="7" y="7" width="2" height="9" rx="1"/>
+                    <rect fill="#000000" opacity="0.3" x="11" y="10" width="2" height="6" rx="1"/>
+                    <rect fill="#000000" opacity="0.3" x="15" y="13" width="2" height="3" rx="1"/>
+                </g>
+            </svg>
+        </span>
+        <span class="menu-text">{{ __('reports.title') }}</span>
+        <i class="menu-arrow"></i>
+    </a>
+   <div class="menu-submenu">
+    <i class="menu-arrow"></i>
+    <ul class="menu-subnav">
+        {{-- Attendance --}}
+
+
+        {{-- Payments --}}
+        <li class="menu-item {{ request()->routeIs('admin.reports.payments.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+            <a href="{{ route('admin.reports.payments.index') }}" class="menu-link">
+                <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                <span class="menu-text">{{ __('reports.payments_report') }}</span>
+            </a>
+        </li>
+
+        {{-- Uniforms --}}
+        <li class="menu-item {{ request()->routeIs('admin.reports.uniforms.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+            <a href="{{ route('admin.reports.uniforms.index') }}" class="menu-link">
+                <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                <span class="menu-text">{{ __('reports.uniforms_report') }}</span>
+            </a>
+        </li>
+
+        {{-- More report links can be added here later --}}
+    </ul>
+</div>
+
+</li>
+@endif
+
 
 
 

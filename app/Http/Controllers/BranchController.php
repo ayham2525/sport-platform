@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\City;
 use App\Models\State;
 use App\Models\Branch;
 use App\Models\Player;
 use App\Models\System;
+use App\Models\Academy;
 use App\Models\Country;
+use App\Models\Program;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\DB;
+
 
 class BranchController extends Controller
 {
@@ -199,54 +204,274 @@ class BranchController extends Controller
     }
 
 
-    public function players(Request $request, $branchId)
-    {
-        $branch = Branch::with(['city.state.country', 'system'])->findOrFail($branchId);
 
-        $query = Player::with(['user', 'sport'])
-            ->whereHas('programs', function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            });
+public function players(Request $request, $branchId)
+{
+    $branch = Branch::with(['city.state.country', 'system'])->findOrFail($branchId);
 
-        // Optional search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
+    // 1) Refresh players.status for THIS branch (active if any program payment ends today or later)
+    DB::affectingStatement("
+        UPDATE players p
+        LEFT JOIN (
+            SELECT player_id, MAX(end_date) AS last_end
+            FROM payments
+            WHERE end_date IS NOT NULL
+              AND category = 'program'
+              AND status IN ('paid','partial')
+            GROUP BY player_id
+        ) x ON x.player_id = p.id
+        SET p.status = CASE
+            WHEN x.last_end IS NOT NULL AND DATE(x.last_end) >= CURDATE() THEN 'active'
+            ELSE 'expired'
+        END
+        WHERE p.branch_id = ?
+    ", [$branchId]);
+
+    // 2) Base scope = players who have programs in this branch (for academy totals)
+    $baseScope = Player::query()
+        ->whereHas('programs', fn ($q) => $q->where('branch_id', $branchId));
+
+    // 2.a) Per-academy totals for this branch (for the academy dropdown)
+    $countsByAcademy = (clone $baseScope)
+        ->selectRaw("
+            academy_id,
+            COUNT(*) AS total,
+            SUM(CASE WHEN status = 'active'  THEN 1 ELSE 0 END) AS active,
+            SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) AS expired
+        ")
+        ->groupBy('academy_id')
+        ->get()
+        ->keyBy('academy_id');
+
+    $academies = Academy::where('branch_id', $branchId)
+        ->select('id','name_en','name_ar')
+        ->orderBy('name_en')
+        ->get()
+        ->map(function ($a) use ($countsByAcademy) {
+            $c = $countsByAcademy->get($a->id);
+            return [
+                'id'      => $a->id,
+                'name_en' => $a->name_en,
+                'name_ar' => $a->name_ar,
+                'total'   => $c->total   ?? 0,
+                'active'  => $c->active  ?? 0,
+                'expired' => $c->expired ?? 0,
+            ];
+        })
+        ->values();
+
+    // 3) Build the main listing query (with eager loads)
+    $base = Player::query()
+        ->with([
+            'user:id,name,email',
+            'sport:id,name_en,name_ar',
+            'nationality:id,name_en,name_ar',
+            'academy:id,name_en,name_ar',
+            'branch:id,name',
+            // limit eager-loaded programs to THIS branch to keep the list relevant
+            'programs' => function ($q) use ($branchId) {
+                $q->select('programs.id','name_en','name_ar','branch_id','academy_id')
+                  ->where('branch_id', $branchId)
+                  ->orderBy('name_en');
+            },
+            'payments' => function ($q) {
+                $q->select('id','player_id','category','status','payment_method_id',
+                           'payment_date','start_date','end_date','paid_amount','reset_number')
+                  ->with(['paymentMethod:id,name,name_ar'])
+                  ->orderByDesc('payment_date')->orderByDesc('id');
+            },
+        ])
+        ->whereHas('programs', fn($q) => $q->where('branch_id', $branchId));
+
+    // 4) Filters
+    $academyId = $request->input('academy_id');
+    if (!empty($academyId)) {
+        $base->where('academy_id', $academyId);
+    }
+
+    $programId = $request->input('program_id');
+    if (!empty($programId)) {
+        $base->whereHas('programs', fn($q) => $q->where('programs.id', $programId));
+    }
+
+    $status = $request->input('status'); // 'active' | 'expired' | null
+    if (in_array($status, ['active','expired'], true)) {
+        $base->where('status', $status);
+    }
+
+    if ($request->filled('search')) {
+        $search = trim((string) $request->input('search'));
+        $base->whereHas('user', function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+        });
+    }
+
+    // 5) Chips (counts reflect CURRENT filters incl. academy & program)
+    $activeCount  = (clone $base)->where('status', 'active')->count();
+    $expiredCount = (clone $base)->where('status', 'expired')->count();
+
+    // 6) Programs list for the program dropdown (depends on selected academy or all)
+    $programs = Program::query()
+        ->where('branch_id', $branchId)
+        ->when($academyId, fn($q) => $q->where('academy_id', $academyId))
+        ->select('id','name_en','name_ar','academy_id')
+        ->orderBy('name_en')
+        ->get();
+
+    // 7) Export
+    if ($request->input('export') === 'excel') {
+        $rows = (clone $base)->orderByDesc('id')->get()->map(function (Player $p) {
+            $sport = $p->sport
+                ? (app()->getLocale()==='ar' ? $p->sport->name_ar : $p->sport->name_en)
+                : '-';
+            $nationality = $p->nationality
+                ? (app()->getLocale()==='ar' ? $p->nationality->name_ar : $p->nationality->name_en)
+                : '-';
+            $academyName = $p->academy
+                ? (app()->getLocale()==='ar' ? $p->academy->name_ar : $p->academy->name_en)
+                : '-';
+            $programNames = $p->programs->map(fn($pr) => app()->getLocale()==='ar' ? ($pr->name_ar ?? $pr->name_en) : $pr->name_en)->join(', ');
+
+            return [
+                'ID'              => $p->id,
+                'Name'            => optional($p->user)->name,
+                'Email'           => optional($p->user)->email,
+                'Phone'           => $p->guardian_phone,
+                'Branch'          => optional($p->branch)->name,
+                'Academy'         => $academyName,
+                'Programs'        => $programNames,
+                'Sport'           => $sport,
+                'Nationality'     => $nationality,
+                'Gender'          => $p->gender,
+                'Player Code'     => $p->player_code,
+                'Birth Date'      => $p->birth_date,
+                'Guardian Name'   => $p->guardian_name,
+                'Guardian Phone'  => $p->guardian_phone,
+                'Position'        => $p->position,
+                'Level'           => $p->level,
+                'Shirt Size'      => $p->shirt_size,
+                'Shorts Size'     => $p->shorts_size,
+                'Shoe Size'       => $p->shoe_size,
+                'Medical Notes'   => $p->medical_notes,
+                'Remarks'         => $p->remarks,
+                'Status'          => $p->status,
+                'Created At'      => optional($p->created_at)->format('Y-m-d'),
+            ];
+        });
+
+        $filename = 'branch_players_'.$branchId.'_'.now()->format('Ymd_His');
+
+        if (class_exists(\Maatwebsite\Excel\Facades\Excel::class)) {
+            $export = new class($rows) implements
+                \Maatwebsite\Excel\Concerns\FromArray,
+                \Maatwebsite\Excel\Concerns\WithHeadings {
+                private $rows;
+                public function __construct($rows) { $this->rows = $rows; }
+                public function array(): array   { return $this->rows->values()->toArray(); }
+                public function headings(): array { return array_keys($this->rows->first() ?? []); }
+            };
+            return \Maatwebsite\Excel\Facades\Excel::download($export, $filename.'.xlsx');
         }
 
-        $players = $query->paginate(10); // Only paginate once
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            if ($rows->isNotEmpty()) {
+                fputcsv($out, array_keys($rows->first()));
+                foreach ($rows as $r) fputcsv($out, array_values($r));
+            }
+            fclose($out);
+        }, $filename.'.csv', ['Content-Type' => 'text/csv']);
+    }
 
-        // If AJAX request (for JS search)
-        if ($request->ajax()) {
-            $playersData = $players->map(function ($player) {
+    // 8) Paginate & respond
+    $players = $base->orderByDesc('id')->paginate(10);
+
+    if ($request->ajax()) {
+        $playersData = $players->map(function (Player $player) use ($branchId) {
+            $programs = $player->programs->map(function ($pr) {
                 return [
-                    'id' => $player->id,
-                    'name' => $player->user->name ?? '',
-                    'email' => $player->user->email ?? '',
-                    'birth_date' => $player->birth_date,
-                    'sport' => $player->sport
-                        ? (app()->getLocale() === 'ar'
-                            ? $player->sport->name_ar
-                            : $player->sport->name_en)
-                        : '-',
-                    'created_at' => $player->created_at->format('Y-m-d'),
+                    'id'   => $pr->id,
+                    'name' => app()->getLocale()==='ar' ? ($pr->name_ar ?? $pr->name_en) : $pr->name_en,
                 ];
             });
 
-            return response()->json([
-                'players' => $playersData,
-                'pagination' => [
-                    'current_page' => $players->currentPage(),
-                    'last_page' => $players->lastPage(),
-                    'total' => $players->total(),
-                ],
-            ]);
-        }
+            $payments = $player->payments->map(function ($p) {
+                return [
+                    'id'           => $p->id,
+                    'category'     => $p->category,
+                    'status'       => $p->status,
+                    'method'       => $p->paymentMethod
+                        ? (app()->getLocale()==='ar'
+                            ? ($p->paymentMethod->name_ar ?? $p->paymentMethod->name)
+                            : $p->paymentMethod->name)
+                        : '-',
+                    'payment_date' => optional($p->payment_date)->format('Y-m-d'),
+                    'start_date'   => optional($p->start_date)->format('Y-m-d'),
+                    'end_date'     => optional($p->end_date)->format('Y-m-d'),
+                    'paid_amount'  => (float) $p->paid_amount,
+                    'reset'        => $p->reset_number,
+                ];
+            });
 
-        // For full page view with Blade
-        return view('admin.branch.players', compact('branch', 'players'));
+            return [
+                'id'             => $player->id,
+                'name'           => optional($player->user)->name ?? '',
+                'email'          => optional($player->user)->email ?? '',
+                'phone'          => $player->guardian_phone ?? '',
+                'birth_date'     => $player->birth_date,
+                'gender'         => $player->gender,
+                'player_code'    => $player->player_code,
+                'guardian_name'  => $player->guardian_name,
+                'guardian_phone' => $player->guardian_phone,
+                'position'       => $player->position,
+                'level'          => $player->level,
+                'shirt_size'     => $player->shirt_size,
+                'shorts_size'    => $player->shorts_size,
+                'shoe_size'      => $player->shoe_size,
+                'medical_notes'  => $player->medical_notes,
+                'remarks'        => $player->remarks,
+                'sport'          => $player->sport
+                    ? (app()->getLocale()==='ar' ? $player->sport->name_ar : $player->sport->name_en)
+                    : '-',
+                'nationality'    => $player->nationality
+                    ? (app()->getLocale()==='ar' ? $player->nationality->name_ar : $player->nationality->name_en)
+                    : '-',
+                'academy'        => $player->academy
+                    ? (app()->getLocale()==='ar' ? $player->academy->name_ar : $player->academy->name_en)
+                    : '-',
+                'branch'         => optional($player->branch)->name,
+                'programs'       => $programs,
+                'created_at'     => optional($player->created_at)->format('Y-m-d'),
+                'status'         => $player->status ?? 'expired',
+                'payments'       => $payments,
+            ];
+        });
+
+        return response()->json([
+            'players' => $playersData->values(),
+            'pagination' => [
+                'current_page' => $players->currentPage(),
+                'last_page'    => $players->lastPage(),
+                'total'        => $players->total(),
+                'from'         => $players->firstItem() ?? 0,
+            ],
+            'counts' => [
+                'active'  => $activeCount,
+                'expired' => $expiredCount,
+            ],
+            'academies' => $academies,
+            'programs'  => $programs->map(fn($p) => [
+                'id'   => $p->id,
+                'name' => app()->getLocale()==='ar' ? ($p->name_ar ?? $p->name_en) : $p->name_en,
+            ])->values(),
+        ]);
     }
+
+    // Full page render (server counts + academies for initial UI)
+    return view('admin.branch.players', compact(
+        'branch', 'players', 'activeCount', 'expiredCount', 'academies'
+    ));
+}
+
 }

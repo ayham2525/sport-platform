@@ -1,6 +1,18 @@
 @php use App\Helpers\PermissionHelper; @endphp
 @extends('layouts.app')
-
+<style>
+    .table-nowrap td,
+    .table-nowrap th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .table-nowrap td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 400px; /* adjust as needed */
+         font-size: 12px
+    }
+</style>
 @section('page_title')
 <h5 class="text-dark font-weight-bold my-2 mr-5">{{ __('player.titles.players') }}</h5>
 @endsection

@@ -345,74 +345,89 @@
 </div>
 @endsection
 @php
-$user = auth()->user();
+    $user = auth()->user();
+    $selectLabel = __('player.actions.select');
 @endphp
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function () {
-    $('.select2').select2();
-});
-</script>
+(function () {
+  // Expose globally for inline onclick="generatePlayerCode()"
+  window.generatePlayerCode = function () {
+    const prefix = 'PLY-';
+    const random = Math.floor(Math.random() * 900000 + 100000);
+    document.getElementById('player_code').value = `${prefix}${random}`;
+  };
 
-<script>
-
-    function generatePlayerCode() {
-        const prefix = 'PLY-';
-        const random = Math.floor(Math.random() * 900000 + 100000);
-        const code = `${prefix}${random}`;
-        document.getElementById('player_code').value = code;
+  document.addEventListener('DOMContentLoaded', function () {
+    // Init Select2 if available (prevents errors if not loaded globally)
+    if (window.jQuery && $.fn && $.fn.select2) {
+      $('.select2').select2({
+        placeholder: @json($selectLabel),
+        allowClear: true
+      });
     }
 
-    window.addEventListener('DOMContentLoaded', function() {
-        $('.select2').select2({
-            placeholder: "{{ __('player.actions.select') }}"
-            , allowClear: true
-        });
+    const systemSelect  = document.getElementById('system_id');
+    const branchSelect  = document.getElementById('branch_id');
+    const academySelect = document.getElementById('academy_id');
 
-        const systemSelect = document.getElementById('system_id');
-        const branchSelect = document.getElementById('branch_id');
-        const academySelect = document.getElementById('academy_id');
+    // Safe placeholder text (string, not an object)
+    const selectOption = `<option value="">${@json($selectLabel)}</option>`;
 
-        const selectText = {
-            !!json_encode(__('player.actions.select')) !!
-        };
-        const selectOption = `<option value="">${selectText}</option>`;
+    const getBranchesBySystemRouteTemplate = "{{ route('admin.getBranchesBySystem', ['system_id' => '__ID__']) }}";
+    const getAcademiesByBranchRouteTemplate = "{{ route('admin.getAcademiesByBranch', ['branch_id' => '__ID__']) }}";
 
-        const getBranchesBySystemRouteTemplate = "{{ route('admin.getBranchesBySystem', ['system_id' => '__ID__']) }}";
-        const getAcademiesByBranchRouteTemplate = "{{ route('admin.getAcademiesByBranch', ['branch_id' => '__ID__']) }}";
+    if (systemSelect && branchSelect) {
+      systemSelect.addEventListener('change', async function () {
+        const systemId = this.value;
+        // Reset dependent selects if empty
+        if (!systemId) {
+          branchSelect.innerHTML = selectOption;
+          if (academySelect) academySelect.innerHTML = selectOption;
+          return;
+        }
 
-        systemSelect.addEventListener('change', function() {
-            const systemId = this.value;
-            if (!systemId) return;
+        try {
+          const url = getBranchesBySystemRouteTemplate.replace('__ID__', encodeURIComponent(systemId));
+          const response = await fetch(url);
+          const data = await response.json();
 
-            const url = getBranchesBySystemRouteTemplate.replace('__ID__', systemId);
+          branchSelect.innerHTML = selectOption;
+          data.forEach(branch => {
+            branchSelect.insertAdjacentHTML('beforeend', `<option value="${branch.id}">${branch.name}</option>`);
+          });
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    branchSelect.innerHTML = selectOption;
-                    data.forEach(branch => {
-                        branchSelect.innerHTML += `<option value="${branch.id}">${branch.name}</option>`;
-                    });
-                    branchSelect.dispatchEvent(new Event('change'));
-                });
-        });
+          // Trigger to load academies for the first branch if needed
+          branchSelect.dispatchEvent(new Event('change'));
+        } catch (e) {
+          console.error('Failed to load branches:', e);
+        }
+      });
+    }
 
-        branchSelect.addEventListener('change', function() {
-            const branchId = this.value;
-            if (!branchId) return;
+    if (branchSelect && academySelect) {
+      branchSelect.addEventListener('change', async function () {
+        const branchId = this.value;
+        if (!branchId) {
+          academySelect.innerHTML = selectOption;
+          return;
+        }
 
-            const url = getAcademiesByBranchRouteTemplate.replace('__ID__', branchId);
+        try {
+          const url = getAcademiesByBranchRouteTemplate.replace('__ID__', encodeURIComponent(branchId));
+          const response = await fetch(url);
+          const data = await response.json();
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    academySelect.innerHTML = selectOption;
-                    data.forEach(academy => {
-                        academySelect.innerHTML += `<option value="${academy.id}">${academy.name_en}</option>`;
-                    });
-                });
-        });
-    });
-
+          academySelect.innerHTML = selectOption;
+          data.forEach(academy => {
+            academySelect.insertAdjacentHTML('beforeend', `<option value="${academy.id}">${academy.name_en}</option>`);
+          });
+        } catch (e) {
+          console.error('Failed to load academies:', e);
+        }
+      });
+    }
+  });
+})();
 </script>

@@ -163,39 +163,85 @@
                     <textarea name="notes" rows="3" class="form-control">{{ $uniformRequest->notes }}</textarea>
                 </div>
                 @php
-    $user = Auth::user();
-@endphp
+                $user = Auth::user();
+                @endphp
 
+                {{-- Branch Status --}}
+            {{-- Branch Status --}}
+                <div class="form-group col-md-4">
+                    <label><i class="la la-sitemap text-muted mr-1"></i> {{ __('uniform_requests.fields.branch_status') }}</label>
+                    <select name="branch_status" class="form-control">
+                        <option value="">{{ __('uniform_requests.select_branch_status') }}</option>
+                        @foreach (\App\Models\UniformRequest::BRANCH_STATUS_OPTIONS as $key => $label)
+                            <option value="{{ $key }}" {{ old('branch_status', $uniformRequest->branch_status) === $key ? 'selected' : '' }}>
+                                {{ __('uniform_requests.branch_statuses.' . $key) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 @if (in_array($user->role, ['full_admin', 'system_admin']))
-
-        {{-- Admin Remarks --}}
-        <div class="form-group col-md-12">
-            <label><i class="la la-comment-dots text-muted mr-1"></i> {{ __('uniform_requests.fields.admin_remarks') }}</label>
-            <textarea name="admin_remarks" rows="3" class="form-control">{{ old('admin_remarks', $uniformRequest->admin_remarks) }}</textarea>
-        </div>
-
-        {{-- Approved At --}}
-        <div class="form-group col-md-4">
-            <label><i class="la la-check-circle text-muted mr-1"></i> {{ __('uniform_requests.fields.approved_at') }}</label>
-            <input type="datetime-local" name="approved_at" class="form-control"
-                   value="{{ old('approved_at', optional($uniformRequest->approved_at)->format('Y-m-d\TH:i')) }}">
-        </div>
-
-        {{-- Ordered At --}}
-        <div class="form-group col-md-4">
-            <label><i class="la la-shipping-fast text-muted mr-1"></i> {{ __('uniform_requests.fields.ordered_at') }}</label>
-            <input type="datetime-local" name="ordered_at" class="form-control"
-                   value="{{ old('ordered_at', optional($uniformRequest->ordered_at)->format('Y-m-d\TH:i')) }}">
-        </div>
-
-        {{-- Delivered At --}}
-        <div class="form-group col-md-4">
-            <label><i class="la la-box-open text-muted mr-1"></i> {{ __('uniform_requests.fields.delivered_at') }}</label>
-            <input type="datetime-local" name="delivered_at" class="form-control"
-                   value="{{ old('delivered_at', optional($uniformRequest->delivered_at)->format('Y-m-d\TH:i')) }}">
-        </div>
-
+{{-- Office Status --}}
+<div class="form-group col-md-4">
+    <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
+    <select name="office_status" id="office_status" class="form-control">
+        <option value="">{{ __('uniform_requests.select_office_status') }}</option>
+        @foreach (\App\Models\UniformRequest::OFFICE_STATUS_OPTIONS as $key => $label)
+            <option value="{{ $key }}" {{ old('office_status', $uniformRequest->office_status) === $key ? 'selected' : '' }}>
+                {{ __('uniform_requests.office_statuses.' . $key) }}
+            </option>
+        @endforeach
+    </select>
+</div>
 @endif
+        {{-- Payment Method --}}
+{{-- Payment Method (varchar) --}}
+<div class="form-group col-md-4">
+    <label><i class="la la-credit-card text-muted mr-1"></i> {{ __('uniform_requests.fields.payment_method') }}</label>
+    <select name="payment_method" class="form-control">
+        <option value="">{{ __('uniform_requests.select_payment_method') }}</option>
+        @foreach($paymentMethods as $pm)
+            @php
+                $label = app()->getLocale() === 'ar'
+                    ? ($pm->name_ar ?? $pm->name)
+                    : (app()->getLocale() === 'ur' ? ($pm->name_ur ?? $pm->name) : $pm->name);
+            @endphp
+            <option value="{{ $label }}" {{ old('payment_method', $uniformRequest->payment_method) === $label ? 'selected' : '' }}>
+                {{ $label }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+
+
+
+                @if (in_array($user->role, ['full_admin', 'system_admin']))
+
+                {{-- Admin Remarks --}}
+                <div class="form-group col-md-12">
+                    <label><i class="la la-comment-dots text-muted mr-1"></i> {{ __('uniform_requests.fields.admin_remarks') }}</label>
+                    <textarea name="admin_remarks" rows="3" class="form-control">{{ old('admin_remarks', $uniformRequest->admin_remarks) }}</textarea>
+                </div>
+
+                {{-- Approved At --}}
+                <div class="form-group col-md-4">
+                    <label><i class="la la-check-circle text-muted mr-1"></i> {{ __('uniform_requests.fields.approved_at') }}</label>
+                    <input type="datetime-local" name="approved_at" class="form-control" value="{{ old('approved_at', optional($uniformRequest->approved_at)->format('Y-m-d\TH:i')) }}">
+                </div>
+
+                {{-- Ordered At --}}
+                <div class="form-group col-md-4">
+                    <label><i class="la la-shipping-fast text-muted mr-1"></i> {{ __('uniform_requests.fields.ordered_at') }}</label>
+                    <input type="datetime-local" name="ordered_at" class="form-control" value="{{ old('ordered_at', optional($uniformRequest->ordered_at)->format('Y-m-d\TH:i')) }}">
+                </div>
+
+                {{-- Delivered At --}}
+                <div class="form-group col-md-4">
+                    <label><i class="la la-box-open text-muted mr-1"></i> {{ __('uniform_requests.fields.delivered_at') }}</label>
+                    <input type="datetime-local" name="delivered_at" class="form-control" value="{{ old('delivered_at', optional($uniformRequest->delivered_at)->format('Y-m-d\TH:i')) }}">
+                </div>
+
+                @endif
             </div>
 
             <div class="text-right">

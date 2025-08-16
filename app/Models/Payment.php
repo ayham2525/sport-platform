@@ -2,6 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Branch;
+use App\Models\Player;
+use App\Models\Academy;
+use App\Models\Program;
+use App\Models\ClassModel;
+use App\Models\PaymentMethod;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
@@ -104,5 +111,59 @@ protected $fillable = [
     public function system()
     {
         return $this->belongsTo(System::class);
+    }
+
+    public function scopeDateRange($q, ?string $from, ?string $to)
+    {
+        if ($from) $q->whereDate('payment_date', '>=', $from);
+        if ($to)   $q->whereDate('payment_date', '<=', $to);
+        return $q;
+    }
+
+    public function scopeStatus($q, ?string $status)
+    {
+        return $status ? $q->where('status', $status) : $q;
+    }
+
+    public function scopeCategory($q, ?string $category)
+    {
+        return $category ? $q->where('category', $category) : $q;
+    }
+
+    public function scopeBranch($q, $branchId)
+    {
+        return $branchId ? $q->where('branch_id', $branchId) : $q;
+    }
+
+    public function scopeAcademy($q, $academyId)
+    {
+        return $academyId ? $q->where('academy_id', $academyId) : $q;
+    }
+
+    public function scopeProgram($q, $programId)
+    {
+        return $programId ? $q->where('program_id', $programId) : $q;
+    }
+
+    public function scopePlayer($q, $playerId)
+    {
+        return $playerId ? $q->where('player_id', $playerId) : $q;
+    }
+
+    public function scopePaymentMethod($q, $methodId)
+    {
+        return $methodId ? $q->where('payment_method_id', $methodId) : $q;
+    }
+
+    public function scopeSystem($q, $systemId)
+    {
+        return $systemId && Schema::hasColumn($this->getTable(), 'system_id')
+            ? $q->where('system_id', $systemId)
+            : $q;
+    }
+
+    public function scopeSearchReset($q, ?string $term)
+    {
+        return $term ? $q->where('reset_number', 'like', "%{$term}%") : $q;
     }
 }

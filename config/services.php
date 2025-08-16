@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'nfc' => [
+        'rest_url' => 'http://localhost:3001/api/card-reader'
+
+    ]
 
 ];

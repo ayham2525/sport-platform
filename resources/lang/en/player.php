@@ -1,6 +1,28 @@
 <?php
 
 return [
+   'title'          => 'Players',
+    'name'           => 'Name',
+    'email'          => 'Email',
+    'phone'          => 'Phone',
+    'birth_date'     => 'Birth Date',
+    'gender'         => 'Gender',
+    'player_code'    => 'Player Code',
+    'guardian_name'  => 'Guardian',
+    'guardian_phone' => 'Guardian Phone',
+    'position'       => 'Position',
+    'level'          => 'Level',
+    'shirt_size'     => 'Shirt Size',
+    'shorts_size'    => 'Shorts Size',
+    'shoe_size'      => 'Shoe Size',
+    'sport'          => 'Sport',
+    'nationality'    => 'Nationality',
+    'academy'        => 'Academy',
+    'branch'         => 'Branch',
+    'created_at'     => 'Created At',
+    'actions'        => 'Actions',
+    'reset'         =>   'Reset',
+
 
     'titles' => [
         'dashboard' => 'Dashboard',
@@ -61,6 +83,15 @@ return [
         'payment_status' => 'Payment Status',
         'payment_start_date' => 'Payment Start Date',
         'payment_end_date' => 'Payment End Date',
+        'unspecified' => 'Unspecified',
+        'payment_method' => 'Payment Method',
+        'card_serial_number'    => 'Card Serial Number',
+
+    ],
+     'status' => [
+        'title'   => 'Status',
+        'active'  => 'Active',
+        'expired' => 'Expired',
     ],
 
     'actions' => [

@@ -36,7 +36,11 @@ use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\UniformRequestController;
 use App\Http\Controllers\CoachEvaluationController;
 use App\Http\Controllers\Admin\EvaluationController;
+use App\Http\Controllers\Reports\PaymentReportController;
+use App\Http\Controllers\Reports\UniformReportController;
 use App\Http\Controllers\Admin\EvaluationCriteriaController;
+use App\Http\Controllers\Reports\BranchPaymentsSummaryController;
+
 
 Route::get('/calendar', function () {
     return view('calendar');
@@ -196,7 +200,11 @@ Route::middleware(['web'])->group(function () {
 
 
 
-
+            // Reports
+             Route::get('/reports/payments/branch-summary', [BranchPaymentsSummaryController::class, 'index'])->name('reports.payments.branch_summary');
+            Route::get('/reports/payments', [PaymentReportController::class, 'index'])->name('reports.payments.index');
+            Route::get('/reports/uniforms', [UniformReportController::class, 'index'])->name('reports.uniforms.index');
+            Route::post('/reports/uniforms/academies', [UniformReportController::class, 'academiesForBranch'])->name('reports.uniforms.academies');
 
             // 🔹 Evaluations & Criteria
             Route::resource('evaluations', EvaluationController::class);

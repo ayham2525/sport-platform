@@ -21,75 +21,116 @@
         </div>
 
         <div class="card-body">
-            <div id="nfcStatus" class="mb-4 text-info">
-                {{ isset($serial_number) ? __('card.card_already_scanned') : __('card.waiting_to_start') }}
+            {{-- ✅ Success Message --}}
+            @if(session('success'))
+                <div class="alert alert-success">
+                    <i class="la la-check-circle"></i> {{ session('success') }}
+                </div>
+            @endif
+
+            {{-- ❌ Error Message --}}
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    <i class="la la-exclamation-triangle"></i> {{ session('error') }}
+                </div>
+            @endif
+
+            {{-- ❌ Validation Errors --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li><i class="la la-times-circle"></i> {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div id="nfcStatus" class="mb-3 text-info">
+                {{ __('card.waiting_to_start') }}
             </div>
 
-            <form method="POST" action="{{ route('admin.cards.store') }}">
+            <form method="POST" action="{{ route('admin.cards.store') }}" id="scanForm">
                 @csrf
                 <input type="hidden" name="player_id" value="{{ $player->id }}">
 
                 <div class="form-group">
-                    <label>
-                        <i class="la la-barcode"></i>
-                        {{ __('card.card_serial_number') }}
+                    <label class="d-flex align-items-center">
+                        <i class="la la-barcode mr-2"></i>
+                        <span>{{ __('card.card_serial_number') }}</span>
                     </label>
-                    <input type="text" name="serial_number" id="serial_number"
-                        class="form-control"
-                        value="{{ $serial_number ?? '' }}"
-                        readonly required>
+                    <input
+                        type="text"
+                        name="card_serial_number"
+                        id="card_serial_number"
+                        class="form-control text-center @error('card_serial_number') is-invalid @enderror"
+                        autofocus
+                        required
+                        autocomplete="off"
+                        inputmode="numeric"
+                        placeholder="{{ __('card.tap_now') }}"
+                        value="{{ $card_serial_number }}"
+                    >
+                    {{-- Inline validation error --}}
+                    @error('card_serial_number')
+                        <span class="invalid-feedback d-block" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
 
-                <button type="button" class="btn btn-outline-info " id="startScanBtn">
-                    <i class="la la-search"></i> {{ __('card.scan_card') }}
-                </button>
+                <div class="d-flex flex-wrap align-items-center">
+                    <button type="submit" class="btn btn-primary mr-2 mb-2" id="saveBtn" disabled>
+                        <i class="la la-save"></i> {{ __('card.save') }}
+                    </button>
 
-                <button type="submit" class="btn btn-primary" id="saveBtn" {{ isset($serial_number) ? '' : 'disabled' }}>
-                    <i class="la la-save"></i> {{ __('card.save') }}
-                </button>
-
-                <a href="{{ route('admin.players.index') }}" class="btn btn-secondary">
-                    <i class="la la-times"></i> {{ __('card.cancel') }}
-                </a>
+                    <a href="{{ route('admin.players.index') }}" class="btn btn-secondary mb-2">
+                        <i class="la la-times"></i> {{ __('card.cancel') }}
+                    </a>
+                </div>
             </form>
+
+            <small class="text-muted d-block mt-3">
+                {{ __('card.note') ?? 'Note:' }}
+                {{ __('card.nfc_hint') ?? 'Place the cursor in the input field and tap the card. The reader will type the number automatically.' }}
+            </small>
         </div>
     </div>
 </div>
-
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-    const socket = io('http://localhost:3001', { autoConnect: false }); // start disconnected
-    const serialInput = document.getElementById("serial_number");
-    const statusDiv = document.getElementById("nfcStatus");
-    const saveBtn = document.getElementById("saveBtn");
-    const startScanBtn = document.getElementById("startScanBtn");
-
-    startScanBtn.addEventListener('click', () => {
-        statusDiv.innerText = "🔄 {{ __('card.connecting') }}";
-        socket.connect();
-    });
-
-    socket.on('connect', () => {
-        statusDiv.innerText = '✅ {{ __('card.connected_wait') }}';
-    });
-
-    socket.on('card-read', (serial) => {
-        serialInput.value = serial;
-        saveBtn.disabled = false;
-        statusDiv.innerText = `✅ {{ __('card.card_scanned') }}: ${serial}`;
-        socket.disconnect();
-    });
-
-    socket.on('card-removed', () => {
-        serialInput.value = '';
-        saveBtn.disabled = true;
-        statusDiv.innerText = '🟡 {{ __('card.card_removed') }}';
-    });
-
-    socket.on('disconnect', () => {
-        if (!serialInput.value) {
-            statusDiv.innerText = '🟠 {{ __('card.reader_disconnected') }}';
-        }
-    });
-</script>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const input   = document.getElementById('card_serial_number'); // ✅ fixed ID
+    const status  = document.getElementById('nfcStatus');
+    const saveBtn = document.getElementById('saveBtn');
+
+    if (input) {
+        input.focus();
+
+        // Prevent Enter from submitting the form (reader sends Enter)
+        input.addEventListener('keydown', (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault(); // stop reload
+                if (input.value.trim().length > 0) {
+                    status.textContent = "✅ {{ __('card.card_scanned') }}: " + input.value;
+                    saveBtn.disabled = false; // enable save button
+                }
+            }
+        });
+
+        // Update status when card UID is typed in
+        input.addEventListener('input', () => {
+            if (input.value.trim().length > 0) {
+                status.textContent = "✅ {{ __('card.card_scanned') }}: " + input.value;
+                saveBtn.disabled = false;
+            } else {
+                status.textContent = "⏳ {{ __('card.waiting_to_start') }}";
+                saveBtn.disabled = true;
+            }
+        });
+    }
+});
+</script>
+@endpush

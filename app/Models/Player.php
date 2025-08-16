@@ -10,6 +10,9 @@ class Player extends Model
     use HasFactory;
     const MODEL_NAME = 'Player';
 
+    const STATUS_ACTIVE  = 'active';
+    const STATUS_EXPIRED = 'expired';
+
     protected $fillable = [
         'user_id',
         'academy_id',
@@ -30,6 +33,7 @@ class Player extends Model
         'sport_id',
         'previous_school',
         'previous_academy',
+        'status'
     ];
 
     // Relationships
@@ -95,5 +99,14 @@ class Player extends Model
     {
         return $this->hasOne(Card::class, 'user_id', 'user_id');
     }
+
+    public function uniformRequests()
+    {
+        return $this->hasMany(UniformRequest::class);
+    }
+
+    public function scopeActive($q)  { return $q->where('status', self::STATUS_ACTIVE); }
+    public function scopeExpired($q) { return $q->where('status', self::STATUS_EXPIRED); }
+
 
 }

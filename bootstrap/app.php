@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Global middleware
         $middleware->append(SetLocale::class);
     })
+     ->withCommands([
+        __DIR__.'/../app/Domain/Orders/Commands',
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
         // Custom exception handling (optional)
     })

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'title' => 'program',
     'titles' => [
         'programs' => 'Programs',
         'dashboard' => 'Dashboard',

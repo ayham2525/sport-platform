@@ -177,6 +177,52 @@
                         }}</label>
                     <textarea name="notes" rows="3" class="form-control"></textarea>
                 </div>
+                {{-- Branch Status --}}
+<div class="form-group col-md-4">
+    <label><i class="la la-sitemap text-muted mr-1"></i> {{ __('uniform_requests.fields.branch_status') }}</label>
+    <select name="branch_status" class="form-control">
+        <option value="">{{ __('uniform_requests.select_branch_status') }}</option>
+        @foreach (\App\Models\UniformRequest::BRANCH_STATUS_OPTIONS as $key => $label)
+            <option value="{{ $key }}" {{ old('branch_status') === $key ? 'selected' : '' }}>
+                {{ __('uniform_requests.branch_statuses.' . $key) }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+{{-- Office Status (admins only) --}}
+@php $user = Auth::user(); @endphp
+@if (in_array($user->role, ['full_admin', 'system_admin']))
+<div class="form-group col-md-4">
+    <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
+    <select name="office_status" class="form-control">
+        <option value="">{{ __('uniform_requests.select_office_status') }}</option>
+        @foreach (\App\Models\UniformRequest::OFFICE_STATUS_OPTIONS as $key => $label)
+            <option value="{{ $key }}" {{ old('office_status') === $key ? 'selected' : '' }}>
+                {{ __('uniform_requests.office_statuses.' . $key) }}
+            </option>
+        @endforeach
+    </select>
+</div>
+@endif
+
+{{-- Payment Method (varchar) --}}
+<div class="form-group col-md-4">
+    <label><i class="la la-credit-card text-muted mr-1"></i> {{ __('uniform_requests.fields.payment_method') }}</label>
+    <select name="payment_method" class="form-control">
+        <option value="">{{ __('uniform_requests.select_payment_method') }}</option>
+        @foreach($paymentMethods as $pm)
+            @php
+                $label = app()->getLocale() === 'ar'
+                    ? ($pm->name_ar ?? $pm->name)
+                    : (app()->getLocale() === 'ur' ? ($pm->name_ur ?? $pm->name) : $pm->name);
+            @endphp
+            <option value="{{ $label }}" {{ old('payment_method') === $label ? 'selected' : '' }}>
+                {{ $label }}
+            </option>
+        @endforeach
+    </select>
+</div>
             </div>
 
             <div class="text-right">
