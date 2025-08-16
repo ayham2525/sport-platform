@@ -63,4 +63,4 @@ Artisan::command('players:update-status {--branch_id=}', function () {
 })->purpose('Update player statuses');
 
 // Run it daily at 11:43 (server time)
-Schedule::command('players:update-status')->dailyAt('06:10');
+Schedule::command('players:update-status')->hourlyAt(14);

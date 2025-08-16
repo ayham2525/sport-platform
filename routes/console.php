@@ -15,4 +15,4 @@ Artisan::command('players:update-status', function () {
 })->purpose('Update player statuses');
 
 // ✅ Correct way: pass the class name using ::class
-Schedule::command(UpdatePlayerStatuses::class)->dailyAt('06:10');
+Schedule::command(UpdatePlayerStatuses::class)->hourlyAt(14);
