@@ -15,5 +15,5 @@ Artisan::command('players:update-status', function () {
     $this->info('Statuses updated.');
 })->purpose('Update player statuses');
 
-Schedule::command(UpdatePlayerStatuses::class)->dailyAt('05:44');
+Schedule::command(UpdatePlayerStatuses::class)->hourlyAt(50);
 
