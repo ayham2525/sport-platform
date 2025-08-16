@@ -94,4 +94,5 @@ return [
     'item_deleted_success' => 'تم حذف العنصر بنجاح.',
     'maximum_player_number_placeholder' => 'أدخل الحد الأقصى لعدد اللاعبين المسموح به في الفرع',
     'maximum_player_number' => 'الحد الأقصى لعدد اللاعبين',
+
 ];

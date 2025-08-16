@@ -122,5 +122,7 @@ return [
         'total' => 'Total',
     ],
 ],
+'branch_payments_summary' => 'Branch Payments Summary',
+
 
 ];

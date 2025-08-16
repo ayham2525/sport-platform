@@ -123,4 +123,6 @@ return [
     ],
 ],
 
+'branch_payments_summary' => 'ملخص مدفوعات الفرع',
+
 ];

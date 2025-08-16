@@ -287,6 +287,13 @@
             </a>
         </li>
 
+        <li class="menu-item {{ request()->routeIs('admin.reports.payments.branch_summary') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+    <a href="{{ route('admin.reports.payments.branch_summary') }}" class="menu-link">
+        <i class="menu-bullet menu-bullet-dot"><span></span></i>
+        <span class="menu-text">{{ __('reports.branch_payments_summary') }}</span>
+    </a>
+</li>
+
         {{-- More report links can be added here later --}}
     </ul>
 </div>
