@@ -11,7 +11,6 @@ class Handler extends ExceptionHandler
 {
     public function register(): void
     {
-        // Handle wrong HTTP method
         $this->renderable(function (MethodNotAllowedHttpException $e, $request) {
             return response()->view('errors.method_not_allowed', [], 405);
         });
@@ -26,7 +25,7 @@ class Handler extends ExceptionHandler
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        // Redirect to login page
+        // redirect to login instead of 500
         return redirect()->guest(route('login'));
     }
 }
