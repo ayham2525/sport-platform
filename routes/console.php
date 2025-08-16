@@ -5,15 +5,14 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Console\Commands\UpdatePlayerStatuses;
 
-
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// This inline command is just a demo placeholder (can be removed if using UpdatePlayerStatuses class)
 Artisan::command('players:update-status', function () {
-    // your logic here...
     $this->info('Statuses updated.');
 })->purpose('Update player statuses');
 
-Schedule::command('players:update-status')->hourlyAt(58);
-
+// ✅ Correct way: pass the class name using ::class
+Schedule::command(UpdatePlayerStatuses::class)->dailyAt('06:10');
