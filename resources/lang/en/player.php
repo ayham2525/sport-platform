@@ -22,6 +22,10 @@ return [
     'created_at'     => 'Created At',
     'actions'        => 'Actions',
     'reset'         =>   'Reset',
+    'status'        => 'Status',
+    'all'    => 'All',
+    'export_excel' => 'Export to Excel',
+
 
 
     'titles' => [
@@ -184,6 +188,11 @@ return [
         'details' => 'Uniform & Guardian Details',
         'additional' => 'Extra Information',
         'payments' => 'Payments',
+    ],
+
+    'last_payment' => [
+        'start_date' => 'Start Date',
+        'end_date'   => 'End Date',
     ],
 
 ];

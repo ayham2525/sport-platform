@@ -22,6 +22,10 @@ return [
     'created_at'     => 'تاريخ الإنشاء',
     'actions'        => 'الإجراءات',
     'reset'          => 'إعادة ضبط',
+    'status'        => 'الحالة',
+    'all'       => 'الكل',
+      'export_excel' => 'تصدير إلى إكسل',
+
 
     'titles' => [
         'dashboard'         => 'لوحة التحكم',
@@ -182,5 +186,9 @@ return [
         'details'    => 'تفاصيل الزي وولي الأمر',
         'additional' => 'معلومات إضافية',
         'payments'   => 'المدفوعات',
+    ],
+    'last_payment' => [
+        'start_date' => 'تاريخ البداية',
+        'end_date'   => 'تاريخ النهاية',
     ],
 ];

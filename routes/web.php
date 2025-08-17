@@ -148,6 +148,9 @@ Route::middleware(['web'])->group(function () {
 
             Route::get('/branches/{branch}/players', [BranchController::class, 'players'])->name('branches.players');
             Route::resource('branches', BranchController::class);
+
+            Route::get('/academies/{id}/players/export', [AcademyController::class, 'exportPlayers'])->name('academies.players.export');
+            Route::get('academies/{academy}/players', [AcademyController::class, 'players'])->name('academies.players');
             Route::resource('academies', AcademyController::class);
 
 

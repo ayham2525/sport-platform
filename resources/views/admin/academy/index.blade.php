@@ -114,6 +114,12 @@
                             </td>
                             <td>{{ $academy->created_at->format('Y-m-d') }}</td>
                             <td nowrap>
+                                {{-- View players --}}
+                            <a href="{{ route('admin.academies.players', $academy->id) }}"
+                            class="btn btn-sm btn-clean btn-icon"
+                            title="{{ __('academy.actions.view_players') }}">
+                                <i class="la la-users"></i>
+                            </a>
                                 @if (PermissionHelper::hasPermission('update', App\Models\Academy::MODEL_NAME))
                                     <a href="{{ route('admin.academies.edit', $academy->id) }}" class="btn btn-sm btn-clean btn-icon" title="{{ __('academy.actions.edit') }}">
                                         <i class="la la-edit"></i>

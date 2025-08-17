@@ -6,6 +6,9 @@ return [
     'edit_title' => 'Edit Academy',
     'subtitle' => 'Academy Management',
     'dashboard' => 'Dashboard',
+    'players' => 'Players',
+    'players_list' => 'Players List',
+
 
     'fields' => [
         'name_en' => 'Academy Name (EN)',
@@ -36,6 +39,7 @@ return [
         'save' => 'Save',
         'cancel' => 'Cancel',
         'update' => 'Update',
+        'view_players' => 'View Players',
     ],
 
     'filters' => [

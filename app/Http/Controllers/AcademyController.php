@@ -7,6 +7,8 @@ use App\Models\Academy;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
+use App\Exports\PlayersQueryExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AcademyController extends Controller
 {
@@ -222,4 +224,43 @@ public function index(Request $request)
 
         return redirect()->route('admin.academies.index')->with('success', 'Academy deleted successfully.');
     }
+
+
+    public function players(Request $request, $id)
+    {
+        if (!PermissionHelper::hasPermission('view', Academy::MODEL_NAME)) {
+            return PermissionHelper::denyAccessResponse();
+        }
+
+        $academy = Academy::findOrFail($id);
+
+        // Build query
+        $query = $academy->players()->with('user');
+        $query = $academy->players()
+            ->with(['user', 'payments' => function ($q) {
+                $q->latest('payment_date')->limit(1);
+            }]);
+
+
+        if ($request->filled('status') && in_array($request->status, ['active','expired'])) {
+            $query->where('status', $request->status);
+        }
+
+        // Counts
+        $activeCount   = $academy->players()->where('status', 'active')->count();
+        $inactiveCount = $academy->players()->where('status', 'expired')->count();
+
+        $players = $query->paginate(15);
+
+        return view('admin.academy.players', compact('academy','players','activeCount','inactiveCount'));
+    }
+
+    public function exportPlayers(Request $request)
+    {
+        return Excel::download(
+            new PlayersQueryExport($request->get('status')),
+            'players.xlsx'
+        );
+    }
+
 }

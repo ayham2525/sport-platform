@@ -6,6 +6,8 @@ return [
     'edit_title' => 'تعديل الأكاديمية',
     'subtitle' => 'إدارة الأكاديميات',
     'dashboard' => 'لوحة التحكم',
+    'players' => 'اللاعبين',
+    'players_list' => 'قائمة اللاعبين',
 
     'fields' => [
         'name_en' => 'اسم الأكاديمية (إنجليزي)',
@@ -36,6 +38,7 @@ return [
         'save' => 'حفظ',
         'cancel' => 'إلغاء',
         'update' => 'تحديث',
+        'view_players' => 'عرض اللاعبين',
     ],
 
     'filters' => [
