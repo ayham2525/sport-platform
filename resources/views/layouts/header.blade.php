@@ -228,7 +228,7 @@
                 <div class="menu-submenu menu-submenu-fixed menu-submenu-left" style="width:1000px">
                     <div class="menu-subnav">
                         <ul class="menu-content">
-                            <li class="menu-item">
+                            {{-- <li class="menu-item">
                                 <h3 class="menu-heading menu-toggle">
                                     <i class="menu-bullet menu-bullet-dot">
                                         <span></span>
@@ -252,16 +252,16 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </li>
+                            </li> --}}
                             <li class="menu-item">
-                                <h3 class="menu-heading menu-toggle">
+                                {{-- <h3 class="menu-heading menu-toggle">
                                     <i class="menu-bullet menu-bullet-dot">
                                         <span></span>
                                     </i>
                                     <span class="menu-text">Profit Margins</span>
                                     <i class="menu-arrow"></i>
-                                </h3>
-                                <ul class="menu-inner">
+                                </h3> --}}
+                                 {{-- <ul class="menu-inner">
                                     <li class="menu-item" aria-haspopup="true">
                                         <a href="javascript:;" class="menu-link">
                                             <i class="menu-bullet menu-bullet-line">
@@ -270,10 +270,10 @@
                                             <span class="menu-text">Overall Profits</span>
                                         </a>
                                     </li>
-                            </li>
-                        </ul>
+
+                                </ul>  --}}
             </li>
-            <li class="menu-item">
+            {{-- <li class="menu-item">
                 <h3 class="menu-heading menu-toggle">
                     <i class="menu-bullet menu-bullet-dot">
                         <span></span>
@@ -291,8 +291,8 @@
                         </a>
                     </li>
                 </ul>
-            </li>
-            <li class="menu-item">
+            </li> --}}
+            {{-- <li class="menu-item">
                 <h3 class="menu-heading menu-toggle">
                     <i class="menu-bullet menu-bullet-dot">
                         <span></span>
@@ -307,7 +307,7 @@
                         </a>
                     </li>
                 </ul>
-            </li>
+            </li> --}}
             </ul>
         </div>
     </div>
