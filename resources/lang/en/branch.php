@@ -94,4 +94,11 @@ return [
     'item_deleted_success' => 'Item deleted successfully.',
     'maximum_player_number_placeholder' => 'Enter maximum number of players allowed in the branch',
     'maximum_player_number' => 'Maximum Number of Players',
+    'titles' => [
+        'branches' => 'Branches',
+    ],
+    'action' => [
+        'list' => 'Branches List',
+        'add' => 'Add Branch',
+    ],
 ];

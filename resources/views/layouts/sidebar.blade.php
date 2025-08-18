@@ -38,7 +38,7 @@
                     <i class="menu-icon ki ki-bold-more-hor icon-md"></i>
                 </li>
 
-                <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+                {{-- <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
     <a href="javascript:;" class="menu-link menu-toggle">
         <span class="svg-icon menu-icon">
             <!-- You can replace this SVG with an icon related to evaluations -->
@@ -75,7 +75,88 @@
             </li>
         </ul>
     </div>
+</li> --}}
+
+
+{{-- ✅ Branches Menu --}}
+@if (PermissionHelper::hasPermission('view', App\Models\Branch::MODEL_NAME))
+<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+    <a href="javascript:;" class="menu-link menu-toggle">
+        <span class="svg-icon menu-icon">
+            <!-- Branches Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <rect x="0" y="0" width="24" height="24"/>
+                    <path d="M4,3 L20,3 C21.1045695,3 22,3.8954305 22,5 L22,19 C22,20.1045695 21.1045695,21 20,21 L4,21 C2.8954305,21 2,20.1045695 2,19 L2,5 C2,3.8954305 2.8954305,3 4,3 Z" fill="#000000"/>
+                </g>
+            </svg>
+        </span>
+        <span class="menu-text">{{ __('branch.titles.branches') }}</span>
+        <i class="menu-arrow"></i>
+    </a>
+    <div class="menu-submenu">
+        <i class="menu-arrow"></i>
+        <ul class="menu-subnav">
+            <li class="menu-item" aria-haspopup="true">
+                <a href="{{ route('admin.branches.index') }}" class="menu-link">
+                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                    <span class="menu-text">{{ __('branch.action.list') }}</span>
+                </a>
+            </li>
+
+            @if (PermissionHelper::hasPermission('create', App\Models\Branch::MODEL_NAME))
+            <li class="menu-item" aria-haspopup="true">
+                <a href="{{ route('admin.branches.create') }}" class="menu-link">
+                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                    <span class="menu-text">{{ __('branch.action.add') }}</span>
+                </a>
+            </li>
+            @endif
+        </ul>
+    </div>
 </li>
+@endif
+
+{{-- ✅ Academies Menu --}}
+@if (PermissionHelper::hasPermission('view', App\Models\Academy::MODEL_NAME))
+<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+    <a href="javascript:;" class="menu-link menu-toggle">
+        <span class="svg-icon menu-icon">
+            <!-- Academies Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <rect x="0" y="0" width="24" height="24"/>
+                    <path d="M3,13 L21,13 C21.5522847,13 22,13.4477153 22,14 L22,20 C22,20.5522847 21.5522847,21 21,21 L3,21 C2.44771525,21 2,20.5522847 2,20 L2,14 C2,13.4477153 2.44771525,13 3,13 Z M6,3 L18,3 C18.5522847,3 19,3.44771525 19,4 L19,10 C19,10.5522847 18.5522847,11 18,11 L6,11 C5.44771525,11 5,10.5522847 5,10 L5,4 C5,3.44771525 5.44771525,3 6,3 Z" fill="#000000"/>
+                </g>
+            </svg>
+        </span>
+        <span class="menu-text">{{ __('academy.titles.academies') }}</span>
+        <i class="menu-arrow"></i>
+    </a>
+    <div class="menu-submenu">
+        <i class="menu-arrow"></i>
+        <ul class="menu-subnav">
+            <li class="menu-item" aria-haspopup="true">
+                <a href="{{ route('admin.academies.index') }}" class="menu-link">
+                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                    <span class="menu-text">{{ __('academy.action.list') }}</span>
+                </a>
+            </li>
+
+            @if (PermissionHelper::hasPermission('create', App\Models\Academy::MODEL_NAME))
+            <li class="menu-item" aria-haspopup="true">
+                <a href="{{ route('admin.academies.create') }}" class="menu-link">
+                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                    <span class="menu-text">{{ __('academy.action.add') }}</span>
+                </a>
+            </li>
+            @endif
+        </ul>
+    </div>
+</li>
+@endif
+
+
 
  @if (PermissionHelper::hasPermission('view', App\Models\Player::MODEL_NAME))
 

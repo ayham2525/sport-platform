@@ -65,4 +65,11 @@ return [
     'confirm' => 'Yes, delete it!',
     'cancel' => 'Cancel',
 ],
+'titles' => [
+        'academies' => 'Academies',
+    ],
+    'action' => [
+        'list' => 'Academies List',
+        'add' => 'Add Academy',
+    ],
 ];
