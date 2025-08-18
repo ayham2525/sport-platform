@@ -44,7 +44,11 @@ class UniformRequestController extends Controller
                                 ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id');
             }
             break;
-
+        case 'system_admin':
+             $branches = Branch::where('system_id', $user->system_id)->pluck('name', 'id');
+              // $players  = Player::where('system_id', $user->system_id)->with('user:id,name')->get();
+                $items    = Item::where('system_id', $user->system_id)
+                                ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id');
         case 'branch_admin':
         case 'academy_admin':
         case 'coach':
@@ -87,8 +91,7 @@ class UniformRequestController extends Controller
         ->toArray();
 
     $uniformRequests = $query->latest()->paginate(10);
-
-    return view('admin.uniform_requests.index', compact(
+     return view('admin.uniform_requests.index', compact(
         'uniformRequests',
         'systems',
         'branches',
