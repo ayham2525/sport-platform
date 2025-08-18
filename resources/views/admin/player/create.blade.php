@@ -209,7 +209,7 @@
                         @endif
                         <div class="form-group">
                             <label>{{ __('player.fields.branch') }}</label>
-                            <select name="branch_id" id="branch_id" class="form-control" {{ $isDisabled ? 'disabled' : '' }} required>
+                            <select name="branch_id" id="branch_id" class="form-control" required>
                                 <option value="">{{ __('player.actions.select') }}</option>
                                 @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}" {{ (int) $selectedBranchId === (int) $branch->id ? 'selected' : '' }}>
@@ -227,7 +227,7 @@
                         @endif
                         <div class="form-group">
                             <label>{{ __('player.fields.academy') }}</label>
-                            <select name="academy_id" id="academy_id" class="form-control" {{ $isDisabled ? 'disabled' : '' }} required>
+                            <select name="academy_id" id="academy_id" class="form-control"  required>
                                 <option value="">{{ __('player.actions.select') }}</option>
                                 @foreach($academies as $academy)
                                 <option value="{{ $academy->id }}" {{ in_array((int) $academy->id, $academyIds) ? 'selected' : '' }}>
