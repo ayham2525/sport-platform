@@ -118,6 +118,8 @@ return [
         'loading' => 'Loading...',
           'export_excel' => 'Export to Excel',
            'scan_card' => 'Scan Card',
+           'reset' => 'Reset',
+           'filter' => 'Filter',
     ],
 
     'hints' => [

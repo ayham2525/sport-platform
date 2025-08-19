@@ -60,58 +60,75 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
-                <form method="GET" action="{{ route('admin.players.index') }}" class="mb-5">
-                    <div class="form-row align-items-end">
-                        <div class="form-group col-md-3">
-                            <label>{{ __('player.fields.system') }}</label>
-                            <select id="system_id" name="system_id" class="form-control select2">
-                                <option value="">{{ __('player.actions.select') }}</option>
-                                @foreach ($systems as $system)
-                                <option value="{{ $system->id }}" {{ request('system_id') == $system->id ? 'selected' : '' }}>
-                                    {{ $system->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+               <form method="GET" action="{{ route('admin.players.index') }}" class="mb-5">
+    <div class="form-row align-items-end">
+        <div class="form-group col-md-3">
+            <label>{{ __('player.fields.system') }}</label>
+            <select id="system_id" name="system_id" class="form-control select2">
+                <option value="">{{ __('player.actions.select') }}</option>
+                @foreach ($systems as $system)
+                    <option value="{{ $system->id }}" {{ request('system_id') == $system->id ? 'selected' : '' }}>
+                        {{ $system->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-                        <div class="form-group col-md-3">
-                            <label>{{ __('player.fields.branch') }}</label>
-                            <select id="branch_id" name="branch_id" class="form-control select2">
-                                <option value="">{{ __('player.actions.select') }}</option>
-                                @foreach ($branches as $branch)
-                                <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
-                                    {{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+        <div class="form-group col-md-3">
+            <label>{{ __('player.fields.branch') }}</label>
+            <select id="branch_id" name="branch_id" class="form-control select2">
+                <option value="">{{ __('player.actions.select') }}</option>
+                @foreach ($branches as $branch)
+                    <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
+                        {{ $branch->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-                        <div class="form-group col-md-3">
-                            <label>{{ __('player.fields.academy') }}</label>
-                            <select id="academy_id" name="academy_id" class="form-control select2">
-                                <option value="">{{ __('player.actions.select') }}</option>
-                                @foreach ($academies as $academy)
-                                <option value="{{ $academy->id }}" {{ request('academy_id') == $academy->id ? 'selected' : '' }}>
-                                    {{ $academy->name_en }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label>{{ __('player.fields.sport') }}</label>
-                            <select id="sport_id" name="sport_id" class="form-control select2">
-                                <option value="">{{ __('player.actions.select') }}</option>
-                                @foreach ($sports as $sport)
-                                <option value="{{ $sport->id }}" {{ request('sport_id') == $sport->id ? 'selected' : '' }}>
-                                    {{ app()->getLocale() === 'ar' ? $sport->name_ar : $sport->name_en }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
+        <div class="form-group col-md-3">
+            <label>{{ __('player.fields.academy') }}</label>
+            <select id="academy_id" name="academy_id" class="form-control select2">
+                <option value="">{{ __('player.actions.select') }}</option>
+                @foreach ($academies as $academy)
+                    <option value="{{ $academy->id }}" {{ request('academy_id') == $academy->id ? 'selected' : '' }}>
+                        {{ $academy->name_en }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-                        <div class="form-group col-md-3">
-                            <label>{{ __('player.fields.player_code') }}</label>
-                            <input type="text" name="search" class="form-control" placeholder="{{ __('player.fields.player_code') }}" value="{{ request('search') }}">
-                        </div>
-                    </div>
-                </form>
+        <div class="form-group col-md-3">
+            <label>{{ __('player.fields.sport') }}</label>
+            <select id="sport_id" name="sport_id" class="form-control select2">
+                <option value="">{{ __('player.actions.select') }}</option>
+                @foreach ($sports as $sport)
+                    <option value="{{ $sport->id }}" {{ request('sport_id') == $sport->id ? 'selected' : '' }}>
+                        {{ app()->getLocale() === 'ar' ? $sport->name_ar : $sport->name_en }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="form-group col-md-3">
+            <label>{{ __('player.fields.player_code') }}</label>
+            <input type="text" name="search" class="form-control" placeholder="{{ __('player.fields.player_code') }}" value="{{ request('search') }}">
+        </div>
+
+        <!-- زر الفلترة -->
+        <div class="form-group col-md-2">
+            <button type="submit" class="btn btn-info btn-block">
+                <i class="la la-filter"></i> {{ __('player.actions.filter') }}
+            </button>
+        </div>
+        <div class="form-group col-md-2">
+    <a href="{{ route('admin.players.index') }}" class="btn btn-secondary btn-block">
+        <i class="la la-undo"></i> {{ __('player.actions.reset') }}
+    </a>
+</div>
+    </div>
+</form>
+
 
                 <div id="players-table-wrapper">
                     @include('admin.player.partials.table', ['players' => $players])
@@ -127,70 +144,113 @@
 
 
 
-
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-
 <script>
-    function generatePlayerCode() {
-        const prefix = 'PLY-';
-        const random = Math.floor(Math.random() * 900000 + 100000);
-        const code = `${prefix}${random}`;
-        document.getElementById('player_code').value = code;
+
+    $(document).ready(function () {
+        $('.select2').select2();
+    });
+
+(function () {
+    const $system  = $('#system_id');
+    const $branch  = $('#branch_id');
+    const $academy = $('#academy_id');
+
+    const placeholderText = @json(__('player.actions.select'));
+
+    // Initialize Select2 if present
+    if (typeof $.fn.select2 === 'function') {
+        $('.select2').select2({ placeholder: placeholderText, allowClear: true });
     }
 
-    window.addEventListener('DOMContentLoaded', function () {
-        $('.select2').select2({
-            placeholder: "{{ __('player.actions.select') }}",
-            allowClear: true
-        });
+    // Named route templates (inside admin group => final name is "admin.getAcademiesByBranch")
+    const academiesByBranchUrlTpl = @json(route('admin.getAcademiesByBranch', ['branch_id' => '__ID__']));
+    // (Optional) if you also cascade System -> Branch, keep this:
+    const branchesBySystemUrlTpl  = @json(route('admin.getBranchesBySystem', ['system_id' => '__ID__']));
 
-        const systemSelect = document.getElementById('system_id');
-        const branchSelect = document.getElementById('branch_id');
-        const academySelect = document.getElementById('academy_id');
+    // Helpers
+    function resetSelect($el) {
+        $el.empty().append(new Option(placeholderText, ''));
+        if ($el.hasClass('select2')) $el.trigger('change.select2');
+        $el.prop('disabled', false);
+    }
 
-        const selectText = {!! json_encode(__('player.actions.select')) !!};
-        const selectOption = `<option value="">${selectText}</option>`;
+    function setLoading($el) {
+        $el.empty().append(new Option(placeholderText, ''));
+        $el.append(new Option('Loading...', '', true, true));
+        if ($el.hasClass('select2')) $el.trigger('change.select2');
+        $el.prop('disabled', true);
+    }
 
-        const getBranchesBySystemRouteTemplate = "{{ route('admin.getBranchesBySystem', ['system_id' => '__ID__']) }}";
-        const getAcademiesByBranchRouteTemplate = "{{ route('admin.getAcademiesByBranch', ['branch_id' => '__ID__']) }}";
+    function populateSelect($el, items, textKey, selectedValue = '') {
+        $el.empty().append(new Option(placeholderText, ''));
+        items.forEach(i => $el.append(new Option(i[textKey], i.id)));
+        if (selectedValue) $el.val(String(selectedValue));
+        if ($el.hasClass('select2')) $el.trigger('change.select2');
+        $el.prop('disabled', false);
+    }
 
-        systemSelect.addEventListener('change', function () {
-            const systemId = this.value;
-            if (!systemId) return;
+    // --- MAIN: Load academies for a given branch ---
+    function loadAcademiesByBranch(branchId, preselect = '') {
+        if (!branchId) { resetSelect($academy); return; }
+        setLoading($academy);
+        const url = academiesByBranchUrlTpl.replace('__ID__', branchId);
+        fetch(url)
+            .then(r => r.json())
+            .then(list => {
+                // Your API returns [{ id, name_en }]
+                populateSelect($academy, list, 'name_en', preselect);
+            })
+            .catch(() => {
+                resetSelect($academy);
+                console.error('Failed to load academies for branch', branchId);
+            });
+    }
 
-            const url = getBranchesBySystemRouteTemplate.replace('__ID__', systemId);
+    // (Optional) If you also want System -> Branch cascade
+    function loadBranchesBySystem(systemId, preselect = '') {
+        if (!systemId) { resetSelect($branch); resetSelect($academy); return Promise.resolve(); }
+        setLoading($branch);
+        resetSelect($academy);
+        const url = branchesBySystemUrlTpl.replace('__ID__', systemId);
+        return fetch(url)
+            .then(r => r.json())
+            .then(list => {
+                // Expecting [{ id, name }]
+                populateSelect($branch, list, 'name', preselect);
+            })
+            .catch(() => {
+                resetSelect($branch);
+                console.error('Failed to load branches for system', systemId);
+            });
+    }
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    branchSelect.innerHTML = selectOption;
-                    data.forEach(branch => {
-                        branchSelect.innerHTML += `<option value="${branch.id}">${branch.name}</option>`;
-                    });
-                    branchSelect.dispatchEvent(new Event('change'));
-                });
-        });
-
-        branchSelect.addEventListener('change', function () {
-            const branchId = this.value;
-            if (!branchId) return;
-
-            const url = getAcademiesByBranchRouteTemplate.replace('__ID__', branchId);
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    academySelect.innerHTML = selectOption;
-                    data.forEach(academy => {
-                        academySelect.innerHTML += `<option value="${academy.id}">${academy.name}</option>`;
-                    });
-                });
-        });
+    // Events
+    $branch.on('change', function () {
+        loadAcademiesByBranch(this.value);
     });
-</script>
 
+    // If you also handle system -> branch
+    $system.on('change', function () {
+        loadBranchesBySystem(this.value);
+    });
+
+    // Rehydrate on initial load (preserve filters on refresh/back)
+    const initialBranch  = $branch.val();
+    const initialAcademy = @json((string) request('academy_id'));
+    if (initialBranch) {
+        loadAcademiesByBranch(initialBranch, initialAcademy);
+    }
+
+    // Optional: expose your code generator if you use it
+    window.generatePlayerCode = function () {
+        const prefix = 'PLY-';
+        const random = Math.floor(Math.random() * 900000 + 100000);
+        const el = document.getElementById('player_code');
+        if (el) el.value = `${prefix}${random}`;
+    };
+})();
+</script>
 
 
 @endsection
