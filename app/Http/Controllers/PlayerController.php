@@ -294,11 +294,11 @@ class PlayerController extends Controller
         ]);
 
         // 3. Send Mail
-        Mail::to($user->email)->send(new NewPlayerCredentials(
-            $user->name,
-            $user->email,
-            $request->password
-        ));
+        // Mail::to($user->email)->send(new NewPlayerCredentials(
+        //     $user->name,
+        //     $user->email,
+        //     $request->password
+        // ));
 
         return redirect()
             ->route('admin.players.index')
