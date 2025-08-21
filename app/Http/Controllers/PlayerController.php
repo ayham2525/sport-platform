@@ -17,6 +17,7 @@ use App\Models\Nationality;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use App\Mail\NewPlayerCredentials;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
@@ -554,56 +555,68 @@ public function show(Player $player)
 
 
 
-    public function assignProgram(Request $request, $playerId)
-    {
-        $messages = [
-            'program_id.required'    => __('messages.select_program_required'),
-            'program_id.exists'      => __('messages.program_not_found'),
-            'class_ids.required'     => __('messages.select_class_required'),
-            'class_ids.array'        => __('messages.invalid_class_format'),
-            'class_ids.*.exists'     => __('messages.invalid_class_selected'),
-        ];
 
-        $request->validate([
-            'program_id'   => 'required|exists:programs,id',
-            'class_ids'    => 'required|array',
-            'class_ids.*'  => 'exists:class_models,id',
-        ], $messages);
+public function assignProgram(Request $request, $playerId)
+{
+    $messages = [
+        'program_id.required' => __('messages.select_program_required'),
+        'program_id.exists'   => __('messages.program_not_found'),
+        'class_ids.array'     => __('messages.invalid_class_format'),
+        'class_ids.*.exists'  => __('messages.invalid_class_selected'),
+    ];
 
-        $player = Player::findOrFail($playerId);
-        $programId = $request->input('program_id');
-        $selectedClassIds = $request->input('class_ids');
+    $validated = $request->validate([
+        'program_id'  => 'required|exists:programs,id',
+        'class_ids'   => 'nullable|array',
+        'class_ids.*' => 'integer|exists:class_models,id',
+    ], $messages);
 
-        // Attach program if not already assigned
-        if (!$player->programs()->where('program_id', $programId)->exists()) {
+    $player    = Player::findOrFail($playerId);
+    $programId = (int) $validated['program_id'];
+    $selectedClassIds = array_values(array_unique(array_map('intval', $validated['class_ids'] ?? [])));
+
+    DB::transaction(function () use ($player, $programId, $selectedClassIds) {
+
+        // --- 1) Upsert player_program (insert if missing, else touch updated_at)
+        $exists = $player->programs()->where('program_id', $programId)->exists();
+
+        if (!$exists) {
+            // inserts row; withTimestamps() fills created_at & updated_at
             $player->programs()->attach($programId);
+        } else {
+            // touches updated_at on the pivot row
+            $player->programs()->updateExistingPivot($programId, ['updated_at' => now()]);
         }
 
-        // Detach existing classes for this program
-        $programClassIds = ClassModel::where('program_id', $programId)->pluck('id')->toArray();
-        $player->classes()->detach($programClassIds);
+        // --- 2) Refresh classes (only those that belong to this program)
+        $programClassIds = ClassModel::where('program_id', $programId)->pluck('id')->all();
+        if (!empty($programClassIds)) {
+            $player->classes()->detach($programClassIds);
+        }
+        if (!empty($selectedClassIds)) {
+            $player->classes()->attach($selectedClassIds);
+        }
 
-        // Attach new selected classes
-        $player->classes()->attach($selectedClassIds);
-
-        // ----------- Payment Calculation Logic -----------
-
-        $program = Program::findOrFail($programId);
+        // --- 3) Payment (full program if no classes; otherwise prorated)
+        $program    = Program::findOrFail($programId);
         $classCount = count($selectedClassIds);
 
-        // Determine price per class (offer or regular)
-        $pricePerClass = $program->price / $program->class_count;
-        $offerPricePerClass = $program->is_offer_active && $program->offer_price
-            ? $program->offer_price / $program->class_count
-            : null;
+        if ($classCount > 0 && (int)$program->class_count > 0) {
+            $perClass = ($program->is_offer_active && $program->offer_price)
+                ? ((float)$program->offer_price / (int)$program->class_count)
+                : ((float)$program->price       / (int)$program->class_count);
 
-        $basePrice = ($offerPricePerClass ?? $pricePerClass) * $classCount;
+            $basePrice = round($perClass * $classCount, 2);
+        } else {
+            $basePrice = (float)($program->is_offer_active && $program->offer_price
+                ? $program->offer_price
+                : $program->price);
+        }
 
-        $vatPercent = $program->vat;
-        $vatAmount = $basePrice * ($vatPercent / 100);
-        $totalPrice = $basePrice + $vatAmount;
+        $vatPercent = (float)($program->vat ?? 0);
+        $vatAmount  = round($basePrice * ($vatPercent / 100), 2);
+        $totalPrice = round($basePrice + $vatAmount, 2);
 
-        // Create payment
         Payment::create([
             'player_id'        => $player->id,
             'program_id'       => $program->id,
@@ -615,17 +628,25 @@ public function show(Player $player)
             'vat_amount'       => $vatAmount,
             'total_price'      => $totalPrice,
             'remaining_amount' => $totalPrice,
-            'currency'         => $program->currency,
+            'currency'         => $program->currency ?? 'AED',
             'status'           => 'pending',
             'note'             => 'Auto-generated upon program assignment',
-            'items'            => json_encode([
-                'class_ids' => $selectedClassIds,
-            ]),
+            'items'            => json_encode(['class_ids' => $selectedClassIds]),
         ]);
+    });
 
-        return redirect()->route('admin.players.index')
-            ->with('success', __('messages.program_assigned_successfully'));
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => __('messages.program_assigned_successfully'),
+        ]);
     }
+
+    return redirect()
+        ->route('admin.players.index')
+        ->with('success', __('messages.program_assigned_successfully'));
+}
+
 
     public function export()
     {

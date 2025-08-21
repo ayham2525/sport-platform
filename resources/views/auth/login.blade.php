@@ -52,7 +52,7 @@ License: You must have a valid license purchased only from themeforest(the above
                     <!--begin::Aside body-->
                     <div class="d-flex flex-column-fluid flex-column flex-center mt-5 mt-lg-0">
                         <a href="#" class="mb-15 text-center">
-                            <img src="{{ asset('assets/media/logos/logo-letter-1.png')  }}" class="max-h-75px" alt="" />
+<img src="{{ asset('assets/media/logos/logo-letter-1.jpeg') }}" class="max-h-75px" alt="" />
                         </a>
 
                         <!--begin::Signin-->

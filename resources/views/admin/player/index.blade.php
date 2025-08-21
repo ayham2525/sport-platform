@@ -296,6 +296,200 @@ $(document).on('click', '.delete-button', function (e) {
 });
 </script>
 
+<script>
+$(function () {
+  // ---------- Route builders ----------
+  const programsUrlTpl = @json(route('admin.players.available_programs', ['player' => '__PLAYER__']));
+  const classesUrlTpl  = @json(url('admin/programs/__PROGRAM__/classes'));
+  const assignUrlTpl   = @json(route('admin.players.assignProgram', ['player' => '__PLAYER__']));
+
+  // ---------- Elements ----------
+  const $modal    = $('#assignProgramModal');
+  const $form     = $('#assignProgramForm');
+  const $errors   = $('#assignProgramErrors');
+  const $loader   = $('#assignProgramLoader');
+  const $content  = $('#assignProgramContent');
+
+  const $playerId = $('#assign_player_id');
+  const $program  = $('#assign_program_id');
+  const $classes  = $('#assign_class_ids');
+
+  const $priceBase = $('#price_base');
+  const $priceVat  = $('#price_vat');
+  const $priceTot  = $('#price_total');
+
+  // ---------- i18n (with safe fallbacks if keys missing) ----------
+  const TXT = {
+    select: @json(__('player.actions.select')),
+    loading: @json(__('player.actions.loading')),
+    noPrograms: @json(__('program.messages.no_available_programs')),
+    noClasses: @json(__('class.messages.no_classes')),
+    selectProgramFirst: @json(__('class.messages.select_program_first')),
+    somethingWrong: @json(__('messages.something_went_wrong')),
+    done: @json(__('messages.done')),
+    error: @json(__('messages.error'))
+  };
+  Object.keys(TXT).forEach(k => {
+    if (typeof TXT[k] === 'string' && TXT[k].includes('.')) {
+      // raw key leaked from lang -> use readable fallback
+      if (k === 'noPrograms') TXT[k] = 'No available programs';
+      if (k === 'noClasses') TXT[k] = 'No classes found';
+      if (k === 'selectProgramFirst') TXT[k] = 'Select a program first';
+      if (k === 'loading') TXT[k] = 'Loading...';
+    }
+  });
+
+  // ---------- Helpers ----------
+  function showLoader() { $loader.show(); $content.hide(); }
+  function showContent(){ $loader.hide(); $content.show(); }
+  function showError(msg){ $errors.removeClass('d-none').text(msg); }
+  function clearError(){ $errors.addClass('d-none').empty(); }
+  function resetProgramSelect() {
+    $program.prop('disabled', false).empty()
+      .append(new Option(TXT.select, ''));
+  }
+  function resetClassesSelect() {
+    $classes.prop('disabled', true).empty();
+  }
+  function setPrices(base = 0, vatAmt = 0, total = 0) {
+    $priceBase.text(Number(base).toFixed(2));
+    $priceVat.text(Number(vatAmt).toFixed(2));
+    $priceTot.text(Number(total).toFixed(2));
+  }
+  // item: { price: "419.00", vat: "5.00", ... }
+  function computeTotalsFromItem(item) {
+    const base = Number(item.price ?? 0);
+    const vatPercent = Number(item.vat ?? 0);
+    const vatAmt = +(base * vatPercent / 100);
+    return { base, vatAmt, total: base + vatAmt };
+  }
+
+  // ---------- Open modal & load programs ----------
+  $(document).on('click', '.assign-program-btn', function () {
+    const playerId = $(this).data('player-id');
+    $playerId.val(playerId);
+    clearError();
+    setPrices(0,0,0);
+    resetProgramSelect();
+    resetClassesSelect();
+
+    $classes.prop('disabled', true)
+            .append(new Option(TXT.selectProgramFirst, '', true, true));
+
+    showLoader();
+    const url = programsUrlTpl.replace('__PLAYER__', playerId);
+
+    $.getJSON(url)
+      .done(function(resp){
+        // FIX: accept both array and {programs:[...]}
+        const list = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.programs) ? resp.programs : []);
+        resetProgramSelect();
+
+        if (list.length === 0) {
+          $program.append(new Option(TXT.noPrograms, '', true, true));
+          $program.prop('disabled', true);
+          showContent();
+          return;
+        }
+
+        list.forEach(p => {
+          const text = {{ app()->getLocale() === 'ar' ? '(p.name_ar || p.name_en)' : '(p.name_en || p.name_ar)' }};
+          const opt = new Option(text, p.id);
+          // stash original program object for price computation later
+          $(opt).data('program', p);
+          $program.append(opt);
+        });
+
+        showContent();
+      })
+      .fail(function(xhr){
+        console.error('available_programs failed:', xhr.status, xhr.responseText);
+        showContent();
+        showError((xhr.responseJSON && xhr.responseJSON.message) || TXT.somethingWrong);
+        $program.prop('disabled', true);
+      });
+
+    $modal.modal('show'); // Bootstrap 4
+  });
+
+  // ---------- On program change: prices + classes ----------
+  $program.on('change', function(){
+    clearError();
+    setPrices(0,0,0);
+    resetClassesSelect();
+
+    const programId = $(this).val();
+    if (!programId) return;
+
+    // prices
+    const optData = $('option:selected', this).data('program') || {};
+    const totals = computeTotalsFromItem(optData);
+    setPrices(totals.base, totals.vatAmt, totals.total);
+
+    // classes
+    const url = classesUrlTpl.replace('__PROGRAM__', programId);
+    $classes.prop('disabled', true).append(new Option(TXT.loading + '...', '', true, true));
+
+    $.getJSON(url)
+      .done(function(list){
+        $classes.empty();
+        if (!Array.isArray(list) || list.length === 0) {
+          $classes.prop('disabled', true)
+                  .append(new Option(TXT.noClasses, '', true, true));
+          return;
+        }
+        list.forEach(c => {
+          const label = `${c.day} | ${c.start_time} - ${c.end_time}${c.location ? ' | ' + c.location : ''}${c.coach_name ? ' | ' + c.coach_name : ''}`;
+          $classes.append(new Option(label, c.id));
+        });
+        $classes.prop('disabled', false);
+      })
+      .fail(function(xhr){
+        console.error('classes fetch failed:', xhr.status, xhr.responseText);
+        $classes.prop('disabled', true).empty();
+        showError((xhr.responseJSON && xhr.responseJSON.message) || TXT.somethingWrong);
+      });
+  });
+
+  // ---------- Submit assign ----------
+  $form.on('submit', function(e){
+    e.preventDefault();
+    clearError();
+
+    const playerId = $playerId.val();
+    const action   = assignUrlTpl.replace('__PLAYER__', playerId);
+    const payload  = $form.serialize();
+
+    const $submit = $form.find('button[type=submit]').prop('disabled', true);
+
+    $.ajax({
+      url: action,
+      method: 'POST',
+      data: payload,
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .done(function(resp){
+      if (window.Swal) {
+        Swal.fire({ icon: 'success', title: TXT.done, timer: 1200, showConfirmButton: false });
+      }
+      $modal.modal('hide');
+    })
+    .fail(function(xhr){
+      const msg = (xhr.responseJSON && xhr.responseJSON.message) || TXT.somethingWrong;
+      showError(msg);
+      if (window.Swal) Swal.fire({ icon:'error', title: TXT.error, text: msg });
+      console.error('assign failed:', xhr.status, xhr.responseText);
+    })
+    .always(function(){
+      $submit.prop('disabled', false);
+    });
+  });
+});
+</script>
+
+
+
+
 
 @endsection
 
