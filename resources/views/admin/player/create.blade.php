@@ -100,13 +100,13 @@
                         <!-- Password -->
                         <div class="form-group">
                             <label><i class="fas fa-lock text-secondary mr-1"></i> {{ __('player.fields.password') }} <span class="text-danger">*</span></label>
-                            <input type="password" name="password" class="form-control" required>
+                            <input type="password" name="password" class="form-control" value="password" required>
                         </div>
 
                         <!-- Confirm Password -->
                         <div class="form-group">
                             <label><i class="fas fa-lock text-secondary mr-1"></i> {{ __('player.fields.confirm_password') }} <span class="text-danger">*</span></label>
-                            <input type="password" name="password_confirmation" class="form-control" required>
+                            <input type="password" name="password_confirmation" class="form-control"  value="password" required>
                         </div>
 
                         <!-- Player Code -->
