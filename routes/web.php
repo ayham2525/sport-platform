@@ -51,18 +51,20 @@ Route::get('/calendar', function () {
 Route::middleware(['web'])->group(function () {
 
     // Language switcher
-    Route::get('lang/{locale}', function ($locale) {
-        if (!in_array($locale, ['en', 'ar'])) abort(400);
-        session(['locale' => $locale]);
+  Route::get('lang/{locale}', function ($locale) {
+    abort_unless(in_array($locale, ['en','ar']), 400);
 
-        app()->setLocale($locale);
+    session(['locale' => $locale]);
+    app()->setLocale($locale);
 
-        if (Auth::check()) {
-            Auth::user()->update(['language' => $locale]);
+    if (Auth::check()) {
+        Auth::user()->update(['language' => $locale]);
+    }
 
-            return back();
-        }
-    })->name('change.locale');
+    // always redirect back (or home if no referrer)
+    return redirect()->back()->with('status', 'language-updated');
+})->name('change.locale');
+
 
     // Auth routes (global, for all users)
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
