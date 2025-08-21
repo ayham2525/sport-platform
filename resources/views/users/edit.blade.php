@@ -124,7 +124,7 @@
                         <div class="col-md-6">
                             <label class="col-form-label">{{ __('columns.password') }}</label>
                             <div class="input-group">
-                                <input type="password" name="password" id="generated-password" class="form-control">
+                                <input type="text" name="password" id="generated-password" class="form-control">
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-outline-secondary"
                                             onclick="generatePassword()">{{ __('actions.generate') }}</button>
@@ -167,12 +167,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectBranchText = "{{ __('messages.select_branch') }}";
 
     // Password Generator
-    function generatePassword(length = 10) {
-        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-        let pass = '';
-        for (let i = 0; i < length; i++) pass += charset[Math.floor(Math.random() * charset.length)];
-        document.getElementById('generated-password').value = pass;
+      window.generatePassword = function (length = 10) {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
+    const passwordInput = document.getElementById("generated-password");
+    if (passwordInput) passwordInput.value = password;
+  };
 
     // Element Selectors
     const systemSelect   = document.getElementById('system_id');
