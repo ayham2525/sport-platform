@@ -165,24 +165,95 @@
     <div class="table-responsive table-scroll">
         <table class="table table-bordered table-hover table-sm report-table table-nowrap">
             <thead class="thead-light">
-                <tr>
-                    <th>#</th>
-                    <th><i class="la la-calendar mr-1"></i>{{ __('uniform_reports.table.request_date') }}</th>
-                    <th><i class="la la-flag mr-1"></i>{{ __('uniform_reports.table.status') }}</th>
-                    <th><i class="la la-sitemap mr-1"></i>{{ __('uniform_reports.table.branch_status') }}</th>
-                    <th><i class="la la-building mr-1"></i>{{ __('uniform_reports.table.office_status') }}</th>
-                    <th><i class="la la-user mr-1"></i>{{ __('uniform_reports.table.player') }}</th>
-                    <th><i class="la la-tshirt mr-1"></i>{{ __('uniform_reports.table.item') }}</th>
-                    <th><i class="la la-map-marker mr-1"></i>{{ __('uniform_reports.table.branch') }}</th>
-                    <th><i class="la la-ruler mr-1"></i>{{ __('uniform_reports.table.size') }}</th>
-                    <th><i class="la la-palette mr-1"></i>{{ __('uniform_reports.table.color') }}</th>
-                    <th class="text-right"><i class="la la-sort-numeric-up mr-1"></i>{{ __('uniform_reports.table.quantity') }}</th>
-                    <th class="text-right"><i class="la la-coins mr-1"></i>{{ __('uniform_reports.table.amount') }}</th>
-                    <th><i class="la la-money-bill mr-1"></i>{{ __('uniform_reports.table.currency') }}</th>
-                    <th><i class="la la-credit-card mr-1"></i>{{ __('uniform_reports.table.payment_method') }}</th>
-                    <th><i class="la la-edit text-muted mr-1"></i> {{ __('uniform_requests.actions.edit') }} / <i class="la la-trash text-muted mr-1"></i> {{ __('uniform_requests.actions.delete') }}</th>
+                @php $gap = app()->getLocale()==='ar' ? 'ml-1' : 'mr-1'; @endphp
 
-                </tr>
+<tr>
+  <th class="align-middle">#</th>
+
+  <th class="align-middle">
+    <i class="la la-calendar-alt text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.request_date') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-flag-checkered text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.status') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-sitemap text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.branch_status') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-building text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.office_status') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-user text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.player') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-tshirt text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.item') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-map-marker text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.branch') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-ruler text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.size') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-palette text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.color') }}
+  </th>
+
+  <th class="text-right align-middle">
+    <i class="la la-sort-numeric-up text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.quantity') }}
+  </th>
+
+  <th class="text-right align-middle">
+    <i class="la la-coins text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.amount') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-money-bill text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.currency') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-credit-card text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.payment_method') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-sticky-note text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.notes') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-comment-dots text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_reports.table.admin_notes') }}
+  </th>
+
+  <th class="align-middle">
+    <i class="la la-edit text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_requests.actions.edit') }}
+    <span class="mx-1">/</span>
+    <i class="la la-trash text-muted {{ $gap }}" aria-hidden="true"></i>
+    {{ __('uniform_requests.actions.delete') }}
+  </th>
+</tr>
+
             </thead>
             <tbody>
                 @foreach ($uniforms as $i => $u)
@@ -206,6 +277,8 @@
                         <td class="text-right">{{ number_format($u->amount, 2) }}</td>
                         <td>{{ optional($u->currency)->code ?? '-' }}</td>
                         <td>{{ $u->payment_method ?? '-' }}</td>
+                        <td>{{ $u->notes ?? '-' }}</td>
+                        <td>{{ $u->admin_remarks ?? '-' }}</td>
                          <td>
                          <a href="{{ route('admin.uniform-requests.edit', $u->id) }}" class="btn btn-sm btn-clean btn-icon" title="{{ __('uniform_requests.actions.edit') }}">
                                     <i class="la la-edit"></i>

@@ -40,5 +40,7 @@ return [
         'amount' => 'Amount',
         'currency' => 'Currency',
         'payment_method' => 'Payment Method',
+        'notes' => 'Notes',
+        'admin_notes' => 'Admin Notes',
     ],
 ];

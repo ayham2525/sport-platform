@@ -89,6 +89,7 @@ return [
         'unspecified'        => 'غير محدد',
         'payment_method'     => 'طريقة الدفع',
         'card_serial_number'    => 'الرقم التسلسلي للبطاقة',
+        'program' => 'البرنامج',
     ],
 
     'status' => [

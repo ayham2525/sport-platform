@@ -90,6 +90,7 @@ return [
         'unspecified' => 'Unspecified',
         'payment_method' => 'Payment Method',
         'card_serial_number'    => 'Card Serial Number',
+        'program' => 'Program',
 
     ],
      'status' => [

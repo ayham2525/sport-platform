@@ -39,5 +39,8 @@ return [
         'amount' => 'المبلغ',
         'currency' => 'العملة',
         'payment_method' => 'طريقة الدفع',
+        'notes' => 'ملاحظات',
+        'admin_notes' => 'ملاحظات الإدارة',
+
     ],
 ];

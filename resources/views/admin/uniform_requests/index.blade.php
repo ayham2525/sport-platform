@@ -1,6 +1,18 @@
 @php use App\Helpers\PermissionHelper; @endphp
 @extends('layouts.app')
-
+<style>
+    .table-nowrap td,
+    .table-nowrap th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .table-nowrap td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px; /* adjust as needed */
+        font-size: 12px
+    }
+</style>
 @section('page_title')
 <h5 class="text-dark font-weight-bold my-2 mr-5">{{ __('uniform_requests.title') }}</h5>
 @endsection
@@ -152,7 +164,7 @@
             @endif
 
             <div class="table-responsive">
-                <table class="table table-bordered table-hover">
+                <table class="table table-bordered table-hover table-nowrap">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -175,6 +187,11 @@
                             <th><i class="la la-shipping-fast text-muted mr-1"></i> {{ __('uniform_requests.fields.ordered_at') }}</th>
                             <th><i class="la la-box-open text-muted mr-1"></i> {{ __('uniform_requests.fields.delivered_at') }}</th>
                             <th><i class="la la-calendar-alt text-muted mr-1"></i> {{ __('uniform_requests.fields.requested_at') }}</th>
+                            <th class="align-middle">
+                            <i class="la la-sticky-note text-muted {{ app()->getLocale()==='ar' ? 'ml-1' : 'mr-1' }}" aria-hidden="true"></i>
+                            {{ __('uniform_requests.fields.notes') }}
+                            </th>
+
                             <th><i class="la la-edit text-muted mr-1"></i> {{ __('uniform_requests.actions.edit') }} / <i class="la la-trash text-muted mr-1"></i> {{ __('uniform_requests.actions.delete') }}</th>
                         </tr>
                     </thead>
@@ -212,6 +229,9 @@
                             <td>{{ $req->ordered_at ? \Carbon\Carbon::parse($req->ordered_at)->format('Y-m-d H:i') : '-' }}</td>
                             <td>{{ $req->delivered_at ? \Carbon\Carbon::parse($req->delivered_at)->format('Y-m-d H:i') : '-' }}</td>
                             <td>{{ $req->created_at ? \Carbon\Carbon::parse($req->created_at)->format('Y-m-d') : '-' }}</td>
+                              <td>
+                                {{ $req->note ? $req->note : '—' }}
+                            </td>
                             <td>
                                 <a href="{{ route('admin.uniform-requests.edit', $req->id) }}" class="btn btn-sm btn-clean btn-icon" title="{{ __('uniform_requests.actions.edit') }}">
                                     <i class="la la-edit"></i>

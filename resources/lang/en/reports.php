@@ -78,6 +78,7 @@ return [
             'remaining' => 'Remaining',
             'currency' => 'Currency',
             'reset_number' => 'Receipt/Reset #',
+
         ],
     ],
 

@@ -78,6 +78,7 @@ return [
             'remaining' => 'المتبقي',
             'currency' => 'العملة',
             'reset_number' => 'رقم الإيصال/السند',
+
         ],
     ],
 

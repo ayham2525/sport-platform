@@ -16,12 +16,22 @@
                 <th>{{ __('player.fields.payment_end_date')}}</th>
                 <th>{{ __('player.fields.payment_status')}}</th>
                 <th>{{ __('player.fields.card_serial_number')}}</th>
+                <th>{{ __('player.fields.program') }}</th>
                 <th>{{ __('player.fields.actions') }}</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($players as $index => $player)
             <tr>
+                @php
+                // pick the most recently (re)assigned program using pivot timestamps
+                $latestProgram = $player->programs
+                    ->sortByDesc(function($p){
+                        return $p->pivot->updated_at ?? $p->pivot->created_at;
+                    })
+                    ->first();
+            @endphp
+
                 <td>{{ $index + $players->firstItem() }}</td>
                 <td>{{ $player->user->name ?? '-' }}</td>
                 <td>{{ $player->player_code ?? '-' }}</td>
@@ -65,6 +75,16 @@
                     {!! $statusIcon !!} <span class="ml-1">{{ $statusText }}</span>
                 </td>
                 <td>{{ $player->user->card_serial_number}}</td>
+                <td>
+                    @if($latestProgram)
+                        {{ app()->getLocale()==='ar'
+                            ? ($latestProgram->name_ar ?? $latestProgram->name_en)
+                            : ($latestProgram->name_en ?? $latestProgram->name_ar) }}
+                    @else
+                        -
+                    @endif
+                </td>
+
 
                 <td nowrap>
                     @if (PermissionHelper::hasPermission('update', App\Models\Player::MODEL_NAME))
