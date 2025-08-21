@@ -250,6 +250,50 @@
         if (el) el.value = `${prefix}${random}`;
     };
 })();
+
+$(document).on('click', '.delete-button', function (e) {
+    e.preventDefault();
+    let form = $(this).closest('form');
+    let playerId = form.data('id');
+
+    Swal.fire({
+        title: "{{ __('messages.confirm_delete') }}",
+        text: "{{ __('messages.delete_warning') }}",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "{{ __('messages.yes_delete') }}",
+        cancelButtonText: "{{ __('messages.cancel') }}",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: "{{ __('messages.deleted') }}",
+                        text: "{{ __('player.messages.player_deleted_successfully') }}",
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    // remove row dynamically
+                    form.closest('tr').fadeOut(500, function() {
+                        $(this).remove();
+                    });
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: "{{ __('messages.error') }}",
+                        text: xhr.responseJSON?.message || "{{ __('messages.something_went_wrong') }}",
+                    });
+                }
+            });
+        }
+    });
+});
 </script>
 
 
