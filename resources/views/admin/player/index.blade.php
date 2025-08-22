@@ -171,7 +171,7 @@
                 width: '100%'
                 , placeholder: @json(__('player.actions.select'))
                 , allowClear: true
-                , dir: @json(app() - > getLocale() === 'ar' ? 'rtl' : 'ltr')
+                , dir: @json(app() -> getLocale() === 'ar' ? 'rtl' : 'ltr')
             });
         } else {
             console.warn('Select2 not found on page.');
@@ -227,7 +227,7 @@
                 .then(r => r.json())
                 .then(list => {
                     // API returns: [{ id, name_en }]
-                    const nameKey = @json(app() - > getLocale() === 'ar' ? 'name_ar' : 'name_en');
+                    const nameKey = @json(app() -> getLocale() === 'ar' ? 'name_ar' : 'name_en');
                     populateSelect($academy, list, nameKey, preselect);
                 })
                 .catch(() => {
@@ -378,7 +378,7 @@
                     , dropdownParent: $modal
                     , placeholder: TXT.select
                     , allowClear: true
-                    , dir: @json(app() - > getLocale() === 'ar' ? 'rtl' : 'ltr')
+                    , dir: @json(app() -> getLocale() === 'ar' ? 'rtl' : 'ltr')
                 });
             }
 
@@ -400,7 +400,7 @@
                     }
 
                     list.forEach(p => {
-                        const text = @json(app() - > getLocale() === 'ar') ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar);
+                        const text = @json(app() -> getLocale() === 'ar') ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar);
                         const opt = new Option(text, p.id);
                         $(opt).data('program', p);
                         $program.append(opt);
