@@ -68,25 +68,31 @@
         </table>
     @endif
 
-    @if (!empty($items))
-        <h4>Items</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Item Name</th>
-                    <th>Quantity</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($items as $item)
-                    <tr>
-                        <td>{{ $itemsMap[$item['item_id']] ?? 'Item #' . $item['item_id'] }}</td>
-                        <td>{{ $item['quantity'] }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    @endif
+  @if (!empty($items))
+    <h4>Items</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach ($items as $item)
+            @php
+                $id   = $item['item_id'] ?? null;
+                $qty  = $item['quantity'] ?? 1;
+                $name = $item['name'] ?? ($id ? ($itemsMap[$id] ?? ('Item #'.$id)) : 'Custom Item');
+            @endphp
+            <tr>
+                <td>{{ $name }}</td>
+                <td>{{ $qty }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
 
     <h4>Totals</h4>
     <table>

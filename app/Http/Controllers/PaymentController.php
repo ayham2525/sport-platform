@@ -303,6 +303,7 @@ public function store(Request $request)
     $payment = new Payment();
 
     // Basic refs
+
     $payment->system_id  = $request->filled('system_id')  ? (int)$request->system_id  : null;
     $payment->branch_id  = $request->filled('branch_id')  ? (int)$request->branch_id  : null;
     $payment->academy_id = $request->filled('academy_id') ? (int)$request->academy_id : null;
@@ -616,30 +617,60 @@ public function invoice(Payment $payment)
         'academy',
     ]);
 
-    $items = $payment->items ? json_decode($payment->items, true) : [];
-    $itemIds  = collect($items)->pluck('item_id')->unique()->toArray();
-    $itemsMap = Item::whereIn('id', $itemIds)->pluck('name_en', 'id')->toArray();
+    // ---- Normalize $items to [{ item_id:int|null, quantity:int, name:string|null }]
+    $decoded = json_decode($payment->items ?? '[]', true);
+    $decoded = is_array($decoded) ? $decoded : [];
 
-    // Decide the local filesystem path (NOT asset URL)
+    // Detect associative vs list without relying on PHP 8.1 array_is_list
+    $isAssoc = static fn(array $a) => array_keys($a) !== range(0, count($a) - 1);
+
+    // If it's an assoc like {"12":3,"19":1} convert to list
+    if ($isAssoc($decoded)) {
+        $decoded = collect($decoded)->map(function ($v, $k) {
+            if (is_array($v)) {
+                return [
+                    'item_id'  => $v['item_id'] ?? $v['id'] ?? $v['product_id'] ?? null,
+                    'quantity' => (int)($v['quantity'] ?? $v['qty'] ?? 1),
+                    'name'     => $v['name'] ?? null,
+                ];
+            }
+            // key is id, value is qty
+            return [
+                'item_id'  => is_numeric($k) ? (int)$k : null,
+                'quantity' => (int)$v,
+                'name'     => null,
+            ];
+        })->values()->all();
+    }
+
+    $items = collect($decoded)->map(function ($it) {
+        $id   = $it['item_id'] ?? $it['id'] ?? $it['product_id'] ?? null;
+        $qty  = (int)($it['quantity'] ?? $it['qty'] ?? 1);
+        $name = $it['name'] ?? null;
+        return ['item_id' => $id !== null ? (int)$id : null, 'quantity' => $qty, 'name' => $name];
+    })->filter(fn ($it) => $it['item_id'] !== null || !empty($it['name']))->values();
+
+    $itemIds  = $items->pluck('item_id')->filter()->unique()->values()->all();
+    $itemsMap = empty($itemIds) ? [] : Item::whereIn('id', $itemIds)->pluck('name_en', 'id')->toArray();
+
+    // ---- Logo as data URI for DomPDF
+
     $fileName = ((int)$payment->system_id === 2) ? 'logo-letter-1.jpeg' : '1.jpg';
     $logoPath = public_path('assets/media/logos/' . $fileName);
-
-    // Create a data URI (works even when remote assets are disabled)
     $logoDataUri = null;
     if (is_file($logoPath)) {
-        $mime = 'image/jpeg'; // adjust if you use .png
+        $mime = 'image/jpeg';
         $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
     }
 
     $pdf = PDF::loadView('admin.payments.invoice', [
-        'payment'    => $payment,
-        'items'      => $items,
-        'itemsMap'   => $itemsMap,
-        'logoDataUri'=> $logoDataUri, // pass data URI
+        'payment'     => $payment,
+        'items'       => $items->all(),
+        'itemsMap'    => $itemsMap,
+        'logoDataUri' => $logoDataUri,
     ]);
 
-    $filename = 'invoice_payment_' . $payment->id . '.pdf';
-    return $pdf->download($filename);
+    return $pdf->download('invoice_payment_' . $payment->id . '.pdf');
 }
 
 
