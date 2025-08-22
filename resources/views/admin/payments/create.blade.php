@@ -1,5 +1,9 @@
 @extends('layouts.app')
-
+<style>
+.select2-container{
+    width: 100% !important;
+}
+</style>
 @section('breadcrumb')
     <ul class="breadcrumb breadcrumb-transparent breadcrumb-dot font-weight-bold p-0 my-2 font-size-sm">
         <li class="breadcrumb-item">
@@ -109,14 +113,15 @@
                     </select>
                 </div>
 
-                <div class="form-group col-md-4" id="player-dev" style="display:none;">
-                    <label><i class="la la-user mr-1"></i> {{ __('payment.fields.player') }}</label>
-                    <select name="player_id" id="player_id" class="form-control"></select>
-                </div>
+
 
                 <div class="form-group col-md-4" id="program-dev" style="display:none;">
                     <label><i class="la la-cube mr-1"></i> {{ __('payment.fields.program') }}</label>
                     <select name="program_id" id="program_id" class="form-control"></select>
+                </div>
+                                <div class="form-group col-md-4" id="player-dev" style="display:none;">
+                    <label><i class="la la-user mr-1"></i> {{ __('payment.fields.player') }}</label>
+                    <select name="player_id" id="player_id" class="select2 form-control"></select>
                 </div>
 
                 <input type="number" name="program_price" id="program_price" class="form-control" value="0" hidden>
@@ -140,6 +145,13 @@
                 <div class="form-group col-md-3">
                     <label><i class="la la-percentage mr-1"></i> {{ __('payment.fields.vat_percent') }}</label>
                     <input type="number" name="vat_percent" class="form-control" step="0.01">
+                </div>
+                <div class="form-group col-md-3">
+                    <label><i class="la la-file-invoice-dollar mr-1"></i> {{ __('payment.fields.is_vat_inclusive') }}</label>
+                    <select name="is_vat_inclusive" class="form-control" required>
+                        <option value="1">{{ __('payment.vat.inclusive') }}</option>
+                        <option value="0">{{ __('payment.vat.exclusive') }}</option>
+                    </select>
                 </div>
 
                 <div class="form-group col-md-3">
@@ -233,9 +245,10 @@ let exchangeRates = {
     // etc.
 };
 </script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
 $(document).ready(function() {
+    $('.select2').select2();
     let systemItems = [];
        const preselectedSystemId = $('#system_id').val();
 
@@ -384,19 +397,49 @@ $(document).ready(function() {
             });
         }
 
-        if (academyId && (category === 'program' || category === 'uniform' || category === 'class')) {
-            $('#player-dev, #program-dev').fadeIn();
-            $('#class-dev').toggle(category !== 'class');
-            $('#classes-dev').toggle(category === 'class');
-            $.get(`/admin/get-players-by-system/${academyId}`, function(data) {
-                $('#player_id').append('<option value="">Select</option>');
-                data.forEach(player => {
-                    $('#player_id').append(`<option value="${player.id}">${player.name}</option>`);
-                });
+       // helper: load players for a given program
+function loadPlayersByProgram(programId) {
+    const $player = $('#player_id');
+    $player.empty().append('<option value="">Loading...</option>');
+
+    if (!programId) {
+        $player.empty().append('<option value="">Select</option>');
+        return;
+    }
+
+    $.getJSON(`/admin/get-players-by-program/${programId}`)
+        .done(function (data) {
+            $player.empty().append('<option value="">Select</option>');
+            data.forEach(function (player) {
+                // expects {id, name} from the controller
+               $player.append(`<option value="${player.id}">${player.id} - ${player.name}</option>`);
+
             });
-        } else {
-            $('#player-dev, #program-dev, #class-dev, #classes-dev').fadeOut();
-        }
+        })
+        .fail(function () {
+            $player.empty().append('<option value="">Failed to load</option>');
+        });
+}
+
+if (academyId && (category === 'program' || category === 'uniform' || category === 'class')) {
+    $('#player-dev, #program-dev').fadeIn();
+    $('#class-dev').toggle(category !== 'class');
+    $('#classes-dev').toggle(category === 'class');
+
+    // load players whenever program changes
+    $('#program_id').off('change.loadPlayers').on('change.loadPlayers', function () {
+        const programId = $(this).val();
+        loadPlayersByProgram(programId);
+    });
+
+    // if a program is already selected (e.g., after validation), load immediately
+    const initialProgramId = $('#program_id').val();
+    loadPlayersByProgram(initialProgramId);
+} else {
+    $('#player-dev, #program-dev, #class-dev, #classes-dev').fadeOut();
+    $('#player_id').empty().append('<option value="">Select</option>');
+}
+
         calculateBasePrice();
     });
 

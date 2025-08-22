@@ -133,4 +133,45 @@ class AjaxController extends Controller
 
         return response()->json($users);
     }
+
+    public function getPlayersByProgram($program_id, Request $request)
+{
+    // Optional extra filters if you need them later:
+    $branchId  = $request->query('branch_id');
+    $academyId = $request->query('academy_id');
+    $status    = $request->query('status');
+
+    // Make sure program exists (optional: return 404 if not)
+    if (!Program::whereKey($program_id)->exists()) {
+        return response()->json([], 404);
+    }
+
+    $playersQuery = Player::query()
+        ->whereHas('programs', function ($q) use ($program_id) {
+            $q->where('program_id', $program_id);
+        })
+        ->with('user:id,name')
+        ->select('id', 'user_id', 'branch_id', 'academy_id', 'status');
+
+    if ($branchId) {
+        $playersQuery->where('branch_id', $branchId);
+    }
+    if ($academyId) {
+        $playersQuery->where('academy_id', $academyId);
+    }
+    if ($status) {
+        $playersQuery->where('status', $status);
+    }
+
+    $players = $playersQuery->get()->map(function ($p) {
+        return [
+            'id'      => $p->id,
+            'user_id' => $p->user_id,
+            'name'    => optional($p->user)->name,
+        ];
+    });
+
+    return response()->json($players);
+}
+
 }

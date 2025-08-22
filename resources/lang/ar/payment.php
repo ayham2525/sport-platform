@@ -35,6 +35,11 @@ return [
         'quantity'          => 'الكمية',
         'classes'           => 'الحصص',
         'price'             => 'السعر',
+        'is_vat_inclusive' => 'نوع الضريبة',
+    ],
+     'vat' => [
+        'inclusive' => 'شامل الضريبة',
+        'exclusive' => 'غير شامل الضريبة',
     ],
 
     'status' => [

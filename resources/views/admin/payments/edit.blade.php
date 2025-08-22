@@ -104,6 +104,17 @@
                     <input type="number" name="vat_percent" class="form-control" step="0.01" value="{{ $payment->vat_percent }}">
                 </div>
                 <div class="form-group col-md-3">
+                <label><i class="la la-file-invoice-dollar text-muted mr-1"></i> {{ __('payment.fields.is_vat_inclusive') }}</label>
+                <select name="is_vat_inclusive" class="form-control" required>
+                    <option value="1" {{ $payment->is_vat_inclusive ? 'selected' : '' }}>
+                        {{ __('payment.vat.inclusive') }}
+                    </option>
+                    <option value="0" {{ !$payment->is_vat_inclusive ? 'selected' : '' }}>
+                        {{ __('payment.vat.exclusive') }}
+                    </option>
+                </select>
+            </div>
+                <div class="form-group col-md-3">
                     <label><i class="la la-calculator text-muted mr-1"></i> {{ __('payment.fields.total_price') }}</label>
                     <input type="number" name="total_price" class="form-control" step="0.01" value="{{ $payment->total_price }}" required>
                 </div>

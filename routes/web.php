@@ -237,7 +237,7 @@ Route::middleware(['web'])->group(function () {
             Route::get('/get-players-by-branch/{branch_id}', [AjaxController::class, 'getPlayersByBranch']);
             Route::get('/get-items-by-system/{system_id}', [AjaxController::class, 'getItemsBySystem']);
             Route::get('/get-users-by-branch/{branch_id}', [AjaxController::class, 'getUsersByBranch'])->name('getUsersByBranch');
-
+            Route::get('/get-players-by-program/{program_id}', [AjaxController::class, 'getPlayersByProgram'])->name('getPlayersByProgram');
 
         });
 });

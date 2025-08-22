@@ -9,9 +9,24 @@
         h2 { margin-bottom: 20px; }
         h4 { margin-top: 30px; margin-bottom: 10px; }
         p { margin: 3px 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .logo { width: 90px; height: 90px; object-fit: contain; } /* fixed size */
+        .meta { text-align: right; font-size: 11px; color: #666; }
     </style>
 </head>
 <body>
+    @if(!empty($logoDataUri))
+        <div class="header">
+            <img src="{{ $logoDataUri }}" alt="Logo" class="logo">
+            <div class="meta">
+                @if(!empty($payment->branch?->name))
+                    <strong>{{ $payment->branch->name }}</strong><br>
+                @endif
+                {{ $payment->academy->name_en ?? '' }}
+            </div>
+        </div>
+    @endif
+
     <h2>Payment Invoice #{{ $payment->id }}</h2>
 
     <p><strong>Date:</strong> {{ $payment->payment_date }}</p>
@@ -53,7 +68,7 @@
         </table>
     @endif
 
-    @if ($items)
+    @if (!empty($items))
         <h4>Items</h4>
         <table>
             <thead>
@@ -82,7 +97,10 @@
             </tr>
             <tr>
                 <th>VAT %</th>
-                <td>{{ number_format($payment->vat_percent, 2) }}</td>
+                <td>
+                    {{ number_format($payment->vat_percent, 2) }}
+                    ({{ $payment->is_vat_inclusive ? 'Inclusive' : 'Exclusive' }})
+                </td>
             </tr>
             <tr>
                 <th>Total Price</th>

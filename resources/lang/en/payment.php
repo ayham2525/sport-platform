@@ -35,6 +35,7 @@ return [
         'quantity' => 'Quantity',
         'classes' => 'Classes',
         'price' => 'Price',
+        'is_vat_inclusive' => 'VAT Type',
     ],
 
     'status' => [
@@ -45,6 +46,10 @@ return [
         'expired'           => 'Expired',
         'unknown'           => 'No Payment',
 
+    ],
+    'vat' => [
+        'inclusive' => 'Inclusive',
+        'exclusive' => 'Exclusive',
     ],
 
     'actions' => [

@@ -169,17 +169,26 @@ License: You must have a valid license purchased only from themeforest(the above
             </div>
             <!--begin::Aside-->
             <!--begin::Content-->
-            <div class="order-1 order-lg-2 flex-column-auto flex-lg-row-fluid d-flex flex-column p-7" style="background-image: url('{{ asset('assets/media/bg/bg-4.jpg') }}');">
-                <!--begin::Content body-->
-                <div class="d-flex flex-column-fluid flex-lg-center">
-                    <div class="d-flex flex-column justify-content-center">
-                        <h3 class="display-3 font-weight-bold my-7 text-white">Welcome to GSC Metronic!</h3>
-                        <p class="font-weight-bold font-size-lg text-white opacity-80">A powerful admin dashboard built for modern sports platforms.
-                            Whether you're managing teams, tracking stats, or powering live events, our solution—built with Bootstrap, Angular, React, and Vue—delivers speed, flexibility, and a winning user experience.</p>
-                    </div>
-                </div>
-                <!--end::Content body-->
-            </div>
+            <div class="order-1 order-lg-2 flex-column-auto flex-lg-row-fluid d-flex flex-column p-7 position-relative"
+     style="background-image: url('{{ asset('assets/media/bg/bk-111.jpeg') }}'); background-size: cover; background-position: center;">
+
+    <!-- Overlay -->
+    <div class="overlay position-absolute w-100 h-100"
+         style="background: rgba(0,0,0,0.5); top:0; left:0; z-index:1;"></div>
+
+    <!--begin::Content body-->
+    <div class="d-flex flex-column-fluid flex-lg-center position-relative" style="z-index:2;">
+        <div class="d-flex flex-column justify-content-center text-center">
+            <h3 class="display-3 font-weight-bold my-7 text-white">Welcome to GSC Metronic!</h3>
+            <p class="font-weight-bold font-size-lg text-white opacity-80">
+                A powerful admin dashboard built for modern sports platforms.
+                Whether you're managing teams, tracking stats, or powering live events, our solution—built with Bootstrap, Angular, React, and Vue—delivers speed, flexibility, and a winning user experience.
+            </p>
+        </div>
+    </div>
+    <!--end::Content body-->
+</div>
+
             <!--end::Content-->
         </div>
         <!--end::Login-->

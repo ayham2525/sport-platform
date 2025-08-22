@@ -223,130 +223,166 @@ public function create()
 
 
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'category' => 'required|in:program,uniform,asset,camp,class',
-            'program_id' => 'nullable|exists:programs,id',
-            'player_id' => 'nullable|exists:users,id',
-            'branch_id' => 'nullable|integer',
-            'academy_id' => 'nullable|integer',
-            'system_id' => 'nullable|integer',
-            'class_count' => 'nullable|numeric|min:0',
-            'total_price' => 'required|numeric|min:0',
-            'paid_amount' => 'required|numeric|min:0',
-            'base_price' => 'required|numeric|min:0',
-            'payment_method_id' => 'required|exists:payment_methods,id',
-            'currency' => 'required|string|max:3',
-            'classes' => 'nullable|array',
-            'classes.*' => 'integer|exists:class_models,id',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'category' => 'required|in:program,uniform,asset,camp,class',
+        'program_id' => 'nullable|exists:programs,id',
+        'player_id' => 'nullable|exists:players,id',
+        'branch_id' => 'nullable|integer',
+        'academy_id' => 'nullable|integer',
+        'system_id' => 'nullable|integer',
+        'class_count' => 'nullable|numeric|min:0',
+        'total_price' => 'required|numeric|min:0',
+        'paid_amount' => 'required|numeric|min:0',
+        'base_price' => 'required|numeric|min:0',
+        'vat_percent' => 'nullable|numeric|min:0',
+        'is_vat_inclusive' => 'required|boolean',
+        'payment_method_id' => 'required|exists:payment_methods,id',
+        'currency' => 'required|string|max:3',
+        'classes' => 'nullable|array',
+        'classes.*' => 'integer|exists:class_models,id',
+    ]);
 
-        $baseCurrency = config('app.base_currency', 'AED');
+    $baseCurrency = config('app.base_currency', 'AED');
 
-        // Convert base_price if currency differs
-        $originalCurrency = strtoupper($request->currency);
-        $conversionRate = 1;
-        $convertedBasePrice = $request->base_price;
-        $convertedTotalPrice = $request->total_price;
-        $convertedPaidAmount = $request->paid_amount;
+    // Inputs (original currency)
+    $originalCurrency   = strtoupper($request->currency);
+    $vatPercent         = (float) ($request->vat_percent ?? 0);
+    $isVatInclusive     = (bool) $request->is_vat_inclusive;
 
-        if ($originalCurrency !== $baseCurrency) {
-            $rate = ExchangeRate::where('base_currency', $originalCurrency)
-                ->where('target_currency', $baseCurrency)
-                ->orderByDesc('fetched_at')
-                ->first();
+    // Start with user-entered numbers
+    $enteredBase   = (float) $request->base_price;
+    $enteredTotal  = (float) $request->total_price;
+    $enteredPaid   = (float) $request->paid_amount;
 
-            if (!$rate) {
-                return redirect()->back()->withErrors(['currency' => 'Exchange rate not found for ' . $originalCurrency . ' to ' . $baseCurrency]);
-            }
+    // Currency conversion to base currency
+    $conversionRate = 1.0;
+    if ($originalCurrency !== $baseCurrency) {
+        $rate = ExchangeRate::where('base_currency', $originalCurrency)
+            ->where('target_currency', $baseCurrency)
+            ->orderByDesc('fetched_at')
+            ->first();
 
-            $conversionRate = $rate->rate;
-            $convertedBasePrice = $request->base_price * $conversionRate;
-            $convertedTotalPrice = $request->total_price * $conversionRate;
-            $convertedPaidAmount = $request->paid_amount * $conversionRate;
+        if (!$rate) {
+            return back()->withErrors(['currency' => 'Exchange rate not found for ' . $originalCurrency . ' to ' . $baseCurrency]);
         }
 
-        $payment = new Payment();
+        $conversionRate = (float) $rate->rate;
+    }
 
-        $payment->system_id = $request->filled('system_id') ? (int)$request->system_id : null;
-        $payment->branch_id = $request->filled('branch_id') ? (int)$request->branch_id : null;
-        $payment->academy_id = $request->filled('academy_id') ? (int)$request->academy_id : null;
-        $payment->category = $request->category;
+    $convertedBase   = $enteredBase  * $conversionRate;
+    $convertedTotal  = $enteredTotal * $conversionRate;
+    $convertedPaid   = $enteredPaid  * $conversionRate;
 
-        if (in_array($request->category, ['program', 'uniform', 'class'])) {
-            $payment->player_id = $request->player_id;
-            $payment->program_id = $request->program_id;
-            if ($request->category === 'class' && is_array($request->classes)) {
-                $payment->class_count = count($request->classes);
-            } else {
-                $payment->class_count = $request->class_count;
-            }
-        }
+    // --- VAT math in base currency ---
+    // Normalize base/total/vat based on inclusivity to ensure internal consistency.
+    if ($vatPercent < 0) { $vatPercent = 0; }
 
-        // Store amounts in base currency
-        $payment->base_price = $convertedBasePrice;
-        $payment->total_price = $convertedTotalPrice;
-        $payment->paid_amount = $convertedPaidAmount;
-        $payment->remaining_amount = $convertedTotalPrice - $convertedPaidAmount;
+    if ($isVatInclusive) {
+        // total includes VAT; derive vat_amount and base_price from total
+        // vatAmount = total - total / (1 + v)
+        $v = $vatPercent / 100.0;
+        $vatAmount       = $v > 0 ? ($convertedTotal - ($convertedTotal / (1 + $v))) : 0.0;
+        $convertedBase   = $convertedTotal - $vatAmount;
+        // Keep $convertedTotal as entered (in base currency)
+    } else {
+        // base excludes VAT; derive vat_amount and total
+        $vatAmount      = $convertedBase * ($vatPercent / 100.0);
+        $convertedTotal = $convertedBase + $vatAmount;
+    }
 
-        $payment->status = $payment->remaining_amount == 0 ? 'paid' : 'partial';
-        $payment->payment_method_id = $request->payment_method_id;
-        $payment->payment_date = now();
-        $payment->note = $request->note;
+    // Round to 2 decimals for money columns
+    $convertedBase  = round($convertedBase, 2);
+    $vatAmount      = round($vatAmount, 2);
+    $convertedTotal = round($convertedTotal, 2);
+    $convertedPaid  = round($convertedPaid, 2);
 
-        // Also record original currency and rate for audit
-        $payment->original_currency = $originalCurrency;
-        $payment->exchange_rate_used = $conversionRate;
+    $payment = new Payment();
 
-        $payment->save();
+    $payment->system_id  = $request->filled('system_id')  ? (int)$request->system_id  : null;
+    $payment->branch_id  = $request->filled('branch_id')  ? (int)$request->branch_id  : null;
+    $payment->academy_id = $request->filled('academy_id') ? (int)$request->academy_id : null;
+    $payment->category   = $request->category;
 
+    if (in_array($request->category, ['program', 'uniform', 'class'])) {
+        $payment->player_id  = $request->player_id;
+        $payment->program_id = $request->program_id;
         if ($request->category === 'class' && is_array($request->classes)) {
-            $payment->classes()->sync(
-                collect($request->classes)->mapWithKeys(function ($classId) {
-                    return [$classId => ['quantity' => 1]];
-                })->toArray()
-            );
+            $payment->class_count = count($request->classes);
+        } else {
+            $payment->class_count = $request->class_count;
         }
+    }
 
-        if ($request->filled('items')) {
-            $items = json_decode($request->items, true);
-            if (is_array($items)) {
-                foreach ($items as &$item) {
-                    // Ensure price and currency are present (default values if missing)
-                    $originalPrice = isset($item['price']) ? floatval($item['price']) : 0;
-                    $originalCurrency = isset($item['currency']) ? strtoupper($item['currency']) : $baseCurrency;
+    // Store amounts in base currency (normalized)
+    $payment->base_price   = $convertedBase;
+    $payment->vat_percent  = $vatPercent;
+    $payment->vat_amount   = $vatAmount;
+    $payment->total_price  = $convertedTotal;
+    $payment->paid_amount  = $convertedPaid;
+    $payment->remaining_amount = $convertedTotal - $convertedPaid;
 
-                    $item['price'] = $originalPrice;
-                    $item['currency'] = $originalCurrency;
+    // Set base & original currency meta
+    $payment->currency            = $baseCurrency;        // stored currency
+    $payment->original_currency   = $originalCurrency;    // user-selected currency
+    $payment->exchange_rate_used  = $conversionRate;
 
-                    if ($originalCurrency !== $baseCurrency) {
-                        $rate = ExchangeRate::where('base_currency', $originalCurrency)
-                            ->where('target_currency', $baseCurrency)
-                            ->orderByDesc('fetched_at')
-                            ->first();
+    // VAT inclusive flag
+    $payment->is_vat_inclusive = $isVatInclusive;
 
-                        if ($rate) {
-                            $item['converted_price'] = $originalPrice * $rate->rate;
-                            $item['exchange_rate_used'] = $rate->rate;
-                        } else {
-                            $item['converted_price'] = $originalPrice;
-                            $item['exchange_rate_used'] = 1;
-                        }
+    // Status / other fields
+    $payment->status            = $payment->remaining_amount == 0.0 ? 'paid' : ($payment->paid_amount > 0 ? 'partial' : 'pending');
+    $payment->payment_method_id = $request->payment_method_id;
+    $payment->payment_date      = now();
+    $payment->note              = $request->note;
+
+    $payment->save();
+
+    if ($request->category === 'class' && is_array($request->classes)) {
+        $payment->classes()->sync(
+            collect($request->classes)->mapWithKeys(fn($classId) => [$classId => ['quantity' => 1]])->toArray()
+        );
+    }
+
+    if ($request->filled('items')) {
+        $items = json_decode($request->items, true);
+        if (is_array($items)) {
+            foreach ($items as &$item) {
+                $origPrice    = isset($item['price']) ? (float)$item['price'] : 0.0;
+                $origCurrItem = isset($item['currency']) ? strtoupper($item['currency']) : $baseCurrency;
+
+                $item['price']    = $origPrice;
+                $item['currency'] = $origCurrItem;
+
+                if ($origCurrItem !== $baseCurrency) {
+                    $rate = ExchangeRate::where('base_currency', $origCurrItem)
+                        ->where('target_currency', $baseCurrency)
+                        ->orderByDesc('fetched_at')
+                        ->first();
+
+                    if ($rate) {
+                        $item['converted_price']   = round($origPrice * (float)$rate->rate, 2);
+                        $item['exchange_rate_used'] = (float)$rate->rate;
                     } else {
-                        $item['converted_price'] = $originalPrice;
+                        $item['converted_price']   = round($origPrice, 2);
                         $item['exchange_rate_used'] = 1;
                     }
+                } else {
+                    $item['converted_price']   = round($origPrice, 2);
+                    $item['exchange_rate_used'] = 1;
                 }
-
-                $payment->items = json_encode($items);
-                $payment->save();
             }
-        }
 
-        return redirect()->route('admin.payments.index')
-            ->with('success', __('payment.messages.payment_created_successfully'));
+            $payment->items = json_encode($items);
+            $payment->save();
+        }
     }
+
+    return redirect()->route('admin.payments.index')
+        ->with('success', __('payment.messages.payment_created_successfully'));
+}
+
 
 
 
@@ -371,34 +407,39 @@ public function create()
     }
 
 
-  public function update(Request $request, Payment $payment)
+public function update(Request $request, Payment $payment)
 {
-
-
     $request->validate([
-        'category' => 'required|in:program,uniform,asset,camp,class',
-        'program_id' => 'nullable|exists:programs,id',
-        'branch_id' => 'nullable|integer',
-        'academy_id' => 'nullable|integer',
-        'system_id' => 'nullable|integer',
-        'class_count' => 'nullable|numeric|min:0',
-        'total_price' => 'required|numeric|min:0',
-        'paid_amount' => 'required|numeric|min:0',
-        'base_price' => 'required|numeric|min:0',
+        'category'          => 'required|in:program,uniform,asset,camp,class',
+        'program_id'        => 'nullable|exists:programs,id',
+        'player_id'         => 'nullable|exists:players,id',
+        'branch_id'         => 'nullable|integer',
+        'academy_id'        => 'nullable|integer',
+        'system_id'         => 'nullable|integer',
+        'class_count'       => 'nullable|numeric|min:0',
+        'base_price'        => 'required|numeric|min:0',
+        'total_price'       => 'required|numeric|min:0',
+        'paid_amount'       => 'required|numeric|min:0',
+        'vat_percent'       => 'nullable|numeric|min:0',
+        'is_vat_inclusive'  => 'required|boolean',
         'payment_method_id' => 'required|exists:payment_methods,id',
-        'currency' => 'required|string|max:3',
-        'classes' => 'nullable|array',
-        'classes.*' => 'integer|exists:class_models,id',
+        'currency'          => 'required|string|max:3',
+        'classes'           => 'nullable|array',
+        'classes.*'         => 'integer|exists:class_models,id',
     ]);
 
-    $baseCurrency = config('app.base_currency', 'AED');
+    $baseCurrency     = config('app.base_currency', 'AED');
     $originalCurrency = strtoupper($request->currency);
+    $vatPercent       = (float) ($request->vat_percent ?? 0);
+    $isVatInclusive   = (bool)  $request->is_vat_inclusive;
 
-    $conversionRate = 1;
-    $convertedBasePrice = $request->base_price;
-    $convertedTotalPrice = $request->total_price;
-    $convertedPaidAmount = $request->paid_amount;
+    // Incoming (user-entered, in original currency)
+    $enteredBase  = (float) $request->base_price;
+    $enteredTotal = (float) $request->total_price;
+    $enteredPaid  = (float) $request->paid_amount;
 
+    // Convert to base currency
+    $conversionRate = 1.0;
     if ($originalCurrency !== $baseCurrency) {
         $rate = ExchangeRate::where('base_currency', $originalCurrency)
             ->where('target_currency', $baseCurrency)
@@ -406,27 +447,46 @@ public function create()
             ->first();
 
         if (!$rate) {
-            return redirect()->back()->withErrors([
+            return back()->withErrors([
                 'currency' => 'Exchange rate not found for ' . $originalCurrency . ' to ' . $baseCurrency
             ]);
         }
-
-        $conversionRate = $rate->rate;
-        $convertedBasePrice *= $conversionRate;
-        $convertedTotalPrice *= $conversionRate;
-        $convertedPaidAmount *= $conversionRate;
+        $conversionRate = (float) $rate->rate;
     }
 
+    $convertedBase  = $enteredBase  * $conversionRate;
+    $convertedTotal = $enteredTotal * $conversionRate;
+    $convertedPaid  = $enteredPaid  * $conversionRate;
+
+    // --- VAT normalization in base currency ---
+    if ($vatPercent < 0) { $vatPercent = 0; }
+
+    if ($isVatInclusive) {
+        // total already includes VAT -> derive base & VAT from total
+        $v          = $vatPercent / 100.0;
+        $vatAmount  = $v > 0 ? ($convertedTotal - ($convertedTotal / (1 + $v))) : 0.0;
+        $convertedBase = $convertedTotal - $vatAmount;
+    } else {
+        // base excludes VAT -> derive VAT & total from base
+        $vatAmount     = $convertedBase * ($vatPercent / 100.0);
+        $convertedTotal = $convertedBase + $vatAmount;
+    }
+
+    // Round money
+    $convertedBase  = round($convertedBase, 2);
+    $vatAmount      = round($vatAmount, 2);
+    $convertedTotal = round($convertedTotal, 2);
+    $convertedPaid  = round($convertedPaid, 2);
+
     // Basic info
-    $payment->system_id = $request->filled('system_id') ? (int)$request->system_id : null;
-    $payment->branch_id = $request->filled('branch_id') ? (int)$request->branch_id : null;
-    $payment->academy_id = $request->filled('academy_id') ? (int)$request->academy_id : null;
-    $payment->category = $request->category;
+    $payment->system_id  = $request->filled('system_id')  ? (int) $request->system_id  : null;
+    $payment->branch_id  = $request->filled('branch_id')  ? (int) $request->branch_id  : null;
+    $payment->academy_id = $request->filled('academy_id') ? (int) $request->academy_id : null;
+    $payment->category   = $request->category;
 
     if (in_array($request->category, ['program', 'uniform', 'class'])) {
-        $payment->player_id = $request->player_id;
-        $payment->program_id = $request->program_id;
-
+        $payment->player_id   = $request->player_id;
+        $payment->program_id  = $request->program_id;
         $payment->class_count = $request->category === 'class' && is_array($request->classes)
             ? count($request->classes)
             : $request->class_count;
@@ -436,53 +496,69 @@ public function create()
         $payment->class_count = null;
     }
 
-    $payment->base_price = $convertedBasePrice;
-    $payment->total_price = $convertedTotalPrice;
-    $payment->paid_amount = $convertedPaidAmount;
-    $payment->remaining_amount = $convertedTotalPrice - $convertedPaidAmount;
-    $payment->status = $payment->remaining_amount == 0 ? 'paid' : 'partial';
-    $payment->payment_method_id = $request->payment_method_id;
-    $payment->note = $request->note;
-    $payment->original_currency = $originalCurrency;
+    // Monetary fields (stored in base currency)
+    $payment->base_price        = $convertedBase;
+    $payment->vat_percent       = $vatPercent;
+    $payment->vat_amount        = $vatAmount;
+    $payment->total_price       = $convertedTotal;
+    $payment->paid_amount       = $convertedPaid;
+    $payment->remaining_amount  = $convertedTotal - $convertedPaid;
+
+    // Currency meta
+    $payment->currency           = $baseCurrency;        // storage currency
+    $payment->original_currency  = $originalCurrency;    // user-entered currency
     $payment->exchange_rate_used = $conversionRate;
+
+    // VAT flag
+    $payment->is_vat_inclusive = $isVatInclusive;
+
+    // Status & other fields
+    $payment->status            = $payment->remaining_amount == 0.0
+        ? 'paid'
+        : ($payment->paid_amount > 0 ? 'partial' : 'pending');
+    $payment->payment_method_id = $request->payment_method_id;
+    $payment->note              = $request->note;
 
     $payment->save();
 
     // Sync classes
     if ($request->category === 'class' && is_array($request->classes)) {
         $payment->classes()->sync(
-            collect($request->classes)->mapWithKeys(fn($classId) => [$classId => ['quantity' => 1]])->toArray()
+            collect($request->classes)->mapWithKeys(fn($id) => [$id => ['quantity' => 1]])->toArray()
         );
     } else {
         $payment->classes()->detach();
     }
 
-    // Update items
+    // Update items (preserve per-item original currency + converted price)
     if ($request->filled('items')) {
         $items = json_decode($request->items, true);
-
         if (is_array($items)) {
             foreach ($items as &$item) {
-                // Ensure required keys exist
+                $origPrice = isset($item['price']) ? (float) $item['price'] : 0.0;
+                $origCurr  = isset($item['currency']) ? strtoupper($item['currency']) : $baseCurrency;
 
-                $item['price'] = $item['price'] ?? 0;
-                $item['currency'] = $item['currency'] ?? $originalCurrency;
-                $item['item_id'] = $item['item_id'] ?? uniqid('item_');
+                $item['price']    = $origPrice;
+                $item['currency'] = $origCurr;
 
-                if ($item['currency'] !== $baseCurrency) {
-                    $rate = ExchangeRate::where('base_currency', $item['currency'])
+                if ($origCurr !== $baseCurrency) {
+                    $rate = ExchangeRate::where('base_currency', $origCurr)
                         ->where('target_currency', $baseCurrency)
                         ->orderByDesc('fetched_at')
                         ->first();
 
-                    $item['converted_price'] = $rate ? $item['price'] * $rate->rate : $item['price'];
-                    $item['exchange_rate_used'] = $rate->rate ?? 1;
+                    if ($rate) {
+                        $item['converted_price']    = round($origPrice * (float)$rate->rate, 2);
+                        $item['exchange_rate_used'] = (float)$rate->rate;
+                    } else {
+                        $item['converted_price']    = round($origPrice, 2);
+                        $item['exchange_rate_used'] = 1;
+                    }
                 } else {
-                    $item['converted_price'] = $item['price'];
+                    $item['converted_price']    = round($origPrice, 2);
                     $item['exchange_rate_used'] = 1;
                 }
             }
-
             $payment->items = json_encode($items);
         } else {
             $payment->items = null;
@@ -499,42 +575,51 @@ public function create()
 
 
 
+
     public function destroy($id)
     {
         Payment::findOrFail($id)->delete();
         return redirect()->route('admin.payments.index')->with('success', __('payment.messages.payment_deleted_successfully'));
     }
 
-    public function invoice(Payment $payment)
-    {
-        $payment->load([
-            'player.user',
-            'program',
-            'classes.academy', // Load academy relation for class
-            'paymentMethod',
-            'branch',
-            'academy',
-        ]);
+public function invoice(Payment $payment)
+{
+    $payment->load([
+        'player.user',
+        'program',
+        'classes.academy',
+        'paymentMethod',
+        'branch',
+        'academy',
+    ]);
 
-        $items = [];
-        if ($payment->items) {
-            $items = json_decode($payment->items, true);
-        }
+    $items = $payment->items ? json_decode($payment->items, true) : [];
+    $itemIds  = collect($items)->pluck('item_id')->unique()->toArray();
+    $itemsMap = Item::whereIn('id', $itemIds)->pluck('name_en', 'id')->toArray();
 
-        // Load item names
-        $itemIds = collect($items)->pluck('item_id')->unique()->toArray();
-        $itemsMap = Item::whereIn('id', $itemIds)->pluck('name_en', 'id')->toArray();
+    // Decide the local filesystem path (NOT asset URL)
+    $fileName = ((int)$payment->system_id === 2) ? '2.jpg' : '1.jpg';
+    $logoPath = public_path('assets/media/logos/' . $fileName);
 
-        $pdf = PDF::loadView('admin.payments.invoice', [
-            'payment' => $payment,
-            'items' => $items,
-            'itemsMap' => $itemsMap,
-        ]);
-
-        $filename = 'invoice_payment_' . $payment->id . '.pdf';
-
-        return $pdf->download($filename);
+    // Create a data URI (works even when remote assets are disabled)
+    $logoDataUri = null;
+    if (is_file($logoPath)) {
+        $mime = 'image/jpeg'; // adjust if you use .png
+        $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
     }
+
+    $pdf = PDF::loadView('admin.payments.invoice', [
+        'payment'    => $payment,
+        'items'      => $items,
+        'itemsMap'   => $itemsMap,
+        'logoDataUri'=> $logoDataUri, // pass data URI
+    ]);
+
+    $filename = 'invoice_payment_' . $payment->id . '.pdf';
+    return $pdf->download($filename);
+}
+
+
 
 
     public function createFromPlayer(Request $request)
