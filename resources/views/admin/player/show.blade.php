@@ -122,6 +122,28 @@
             -
         @endif
     </p>
+    <p><i class="la la-user"></i> <strong>{{ __('player.fields.player_status') }}:</strong>
+        @php
+            $status = $player->status ?? 'active';
+            $badge  = [
+                'active'  => 'success',
+                'expired' => 'danger',
+                'stopped' => 'secondary',
+            ][$status] ?? 'light';
+
+            $icon = [
+                'active'  => 'la la-check-circle',
+                'expired' => 'la la-times-circle',
+                'stopped' => 'la la-pause-circle',
+            ][$status] ?? 'la la-minus-circle';
+        @endphp
+
+        <span class="badge badge-{{ $badge }}">
+            <i class="{{ $icon }} text-white "></i>
+            {{ __('player.status.' . $status) }}
+        </span>
+    </p>
+    <p>
 </div>
 
             </div>
