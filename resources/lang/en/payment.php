@@ -36,6 +36,7 @@ return [
         'classes' => 'Classes',
         'price' => 'Price',
         'is_vat_inclusive' => 'VAT Type',
+        'player_id' => 'Search by Player ID',
     ],
 
     'status' => [
@@ -72,6 +73,7 @@ return [
         'select_academy'    => 'Select Academy',
         'search_player'     => 'Search by Player Name',
         'select'            => 'Select',
+        'player_id'         => 'Search by Player ID',
     ],
 
     'messages' => [

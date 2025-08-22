@@ -87,6 +87,9 @@ class PaymentController extends Controller
     if ($request->filled('academy_id')) {
         $query->where('academy_id', $request->academy_id);
     }
+    if ($request->filled('player_id')) {
+        $query->where('player_id', $request->player_id);
+    }
 
     if ($request->filled('status')) {
         $query->where('status', $request->status);

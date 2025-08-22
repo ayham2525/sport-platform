@@ -1,5 +1,21 @@
 @php use App\Helpers\PermissionHelper; @endphp
 @extends('layouts.app')
+<style>
+    .table-nowrap td,
+    .table-nowrap th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .table-nowrap td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 400px;
+        /* adjust as needed */
+        font-size: 12px;
+    }
+
+</style>
 @section('breadcrumb')
 <ul class="breadcrumb breadcrumb-transparent breadcrumb-dot font-weight-bold p-0 my-2 font-size-sm">
     <li class="breadcrumb-item">
@@ -59,6 +75,10 @@
                     <label><i class="fas fa-search mr-1"></i> {{ __('payment.filters.search_player') }}</label>
                     <input type="text" name="search" class="form-control" placeholder="{{ __('payment.filters.search_player') }}" value="{{ request('search') }}">
                 </div>
+                 <div class="col-12 col-md mb-2">
+                    <label><i class="fas fa-search mr-1"></i> {{ __('payment.filters.player_id') }}</label>
+                    <input type="text" name="player_id" class="form-control" placeholder="{{ __('payment.filters.player_id') }}" value="{{ request('player_id') }}">
+                </div>
 
                 <div class="col-12 col-md-auto d-flex align-items-end mb-2">
                     <button type="submit" class="btn btn-primary w-100">
@@ -100,10 +120,11 @@
 
 
         <div class="table-responsive">
-            <table class="table table-bordered table-hover">
+            <table class="table table-bordered table-hover table-nowrap">
                 <thead class="thead-light">
                     <tr>
                         <th>#</th>
+                         <th>{{ __('player.fields.id') }}</th>
                         <th><i class="fas fa-user"></i> {{ __('payment.fields.player') }}</th>
                         <th><i class="fas fa-cube"></i> {{ __('payment.fields.program') }}</th>
                         <th><i class="fas fa-wallet"></i> {{ __('payment.fields.amount') }}</th>
@@ -119,6 +140,7 @@
                     @foreach ($payments as $index => $payment)
                     <tr>
                         <td>{{ $index + $payments->firstItem() }}</td>
+                         <td>{{ $payment->player_id}}</td>
                         <td>{{ $payment->player->user->name ?? '-' }}</td>
                         <td>{{ $payment->program->name_en ?? '-' }}</td>
                         <td>{{ $payment->total_price }} {{ $payment->currency }}</td>

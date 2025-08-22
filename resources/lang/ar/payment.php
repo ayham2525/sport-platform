@@ -73,6 +73,7 @@ return [
         'select_academy'    => 'اختر الأكاديمية',
         'search_player'     => 'بحث باسم اللاعب',
         'select'            => 'اختر',
+        'player_id'         => 'بحث برقم هوية اللاعب',
     ],
 
     'messages' => [
