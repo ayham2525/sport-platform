@@ -10,7 +10,7 @@
         h4 { margin-top: 30px; margin-bottom: 10px; }
         p { margin: 3px 0; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .logo { width: 90px; height: 90px; object-fit: contain; } /* fixed size */
+        .logo { width: 150px; height: 75px; object-fit: contain; } /* fixed size */
         .meta { text-align: right; font-size: 11px; color: #666; }
     </style>
 </head>

@@ -598,7 +598,7 @@ public function invoice(Payment $payment)
     $itemsMap = Item::whereIn('id', $itemIds)->pluck('name_en', 'id')->toArray();
 
     // Decide the local filesystem path (NOT asset URL)
-    $fileName = ((int)$payment->system_id === 2) ? '2.jpg' : '1.jpg';
+    $fileName = ((int)$payment->system_id === 2) ? 'logo-letter-1.jpeg' : '1.jpg';
     $logoPath = public_path('assets/media/logos/' . $fileName);
 
     // Create a data URI (works even when remote assets are disabled)
