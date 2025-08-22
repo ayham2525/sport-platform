@@ -10,22 +10,32 @@
 @if(app()->getLocale() === 'ar')
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        html, body {
-            font-family: 'Tajawal', sans-serif !important;
+        html, body { font-family: 'Tajawal', sans-serif !important; text-align: right; }
 
-            text-align: right;
-        }
-
-        /* Preserve icon fonts */
-        [class^="la"], [class*=" la"],
-        [class^="fa"], [class*=" fa"] {
-            font-family: 'Line Awesome Free' !important;
-            font-weight: 900 !important;
-        }
+        /* Keep icon fonts working */
+        .la, [class^="la-"], [class*=" la-"] { font-family: 'Line Awesome Free' !important; font-weight: 900 !important; }
+        .fa, [class^="fa-"], [class*=" fa-"] { font-family: 'Font Awesome 5 Free' !important; font-weight: 900 !important; }
+        .fab { font-family: 'Font Awesome 5 Brands' !important; font-weight: 400 !important; }
     </style>
-    @else
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
-    @endif
+@else
+    <!-- Speed up & load Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+            font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
+            text-align: left;
+        }
+
+        /* Keep icon fonts working */
+        .la, [class^="la-"], [class*=" la-"] { font-family: 'Line Awesome Free' !important; font-weight: 900 !important; }
+        .fa, [class^="fa-"], [class*=" fa-"] { font-family: 'Font Awesome 5 Free' !important; font-weight: 900 !important; }
+        .fab { font-family: 'Font Awesome 5 Brands' !important; font-weight: 400 !important; }
+    </style>
+@endif
+
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
 		<link href="{{ asset('assets/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}" rel="stylesheet" type="text/css" />
 		<link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
