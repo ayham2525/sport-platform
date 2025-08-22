@@ -10,6 +10,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Auth\AuthenticationException;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -53,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
                     return redirect()->back()
                         ->withErrors($e->errors())
                         ->withInput();
+                }
+
+                // 👇 Handle session expired / unauthenticated
+                if ($e instanceof AuthenticationException) {
+                    return redirect()->guest(route('login'));
                 }
 
                 if ($e instanceof HttpException || $e instanceof \Error || $e instanceof \Exception) {
