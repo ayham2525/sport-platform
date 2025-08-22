@@ -62,7 +62,7 @@
 
                 {{-- Programs Table --}}
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover table-nowrap">
                         <thead>
                             <tr>
                                 <th>#</th>

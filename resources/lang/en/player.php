@@ -92,6 +92,7 @@ return [
         'payment_method' => 'Payment Method',
         'card_serial_number'    => 'Card Serial Number',
         'program' => 'Program',
+        'user_name' => 'Player Name',
 
     ],
      'status' => [

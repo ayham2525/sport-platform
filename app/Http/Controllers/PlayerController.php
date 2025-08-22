@@ -22,8 +22,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
-
-
 class PlayerController extends Controller
 {
     public function index(Request $request)
@@ -35,9 +33,7 @@ class PlayerController extends Controller
         $query = Player::with('user', 'branch', 'academy', 'nationality', 'sport');
         $sports = Sport::all();
 
-
-
-        // Restrict players based on role
+// Restrict players based on role
         switch ($user->role) {
             case 'system_admin':
                 if ($user->system_id) {
@@ -96,6 +92,17 @@ class PlayerController extends Controller
             $query->where('sport_id', $request->sport_id);
         }
 
+        if ($request->filled('player_id')) {
+            $query->where('id', (int) $request->player_id);
+        }
+        if ($request->filled('user_name')) {
+            $term = trim($request->user_name);
+            $query->whereHas('user', function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%");
+            });
+        }
+
+
         if ($request->filled('search')) {
             $query->where('player_code', 'like', '%' . $request->search . '%');
         }
@@ -146,14 +153,7 @@ class PlayerController extends Controller
         return view('admin.player.index', compact('players', 'systems', 'branches', 'academies', 'sports'));
     }
 
-
-
-
-
-
-
-
-    public function create()
+public function create()
     {
         if (!PermissionHelper::hasPermission('view', Player::MODEL_NAME)) {
             return PermissionHelper::denyAccessResponse();
@@ -204,8 +204,7 @@ class PlayerController extends Controller
 
         $academies = $academies->get();
 
-
-        // 4. Other data
+// 4. Other data
         $nationalities = Nationality::all();
         $sports = Sport::all();
 
@@ -218,9 +217,7 @@ class PlayerController extends Controller
         ));
     }
 
-
-
-    public function store(Request $request)
+public function store(Request $request)
     {
 
         if (!PermissionHelper::hasPermission('create', Player::MODEL_NAME)) {
@@ -306,58 +303,50 @@ class PlayerController extends Controller
             ->with('success', __('player.messages.player_created_successfully'));
     }
 
+// app/Http/Controllers/PlayerController.php
 
+    public function show(Player $player)
+    {
+        if (!PermissionHelper::hasPermission('view', Player::MODEL_NAME)) {
+            return PermissionHelper::denyAccessResponse();
+        }
 
+        $systemId = optional($player->branch)->system_id;
 
-    // app/Http/Controllers/PlayerController.php
+        $items = [];
+        if ($systemId) {
+            $items = Item::where('system_id', $systemId)
+                ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id')
+                ->toArray();
+        }
 
-public function show(Player $player)
-{
-    if (!PermissionHelper::hasPermission('view', Player::MODEL_NAME)) {
-        return PermissionHelper::denyAccessResponse();
+        $currencies = Currency::all();
+
+        $player->load([
+            'user',
+            'branch',
+            'academy',
+            'nationality',
+            'sport',
+            'payments.branch',
+            'payments.paymentMethod',
+            'uniformRequests.item',
+            'uniformRequests.currency',
+        ]);
+
+        // If you prefer a sorted collection in the view:
+        $uniformRequests = $player->uniformRequests()
+            ->with(['item', 'currency'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('admin.player.show', compact('player', 'items', 'currencies', 'uniformRequests'));
     }
 
-    $systemId = optional($player->branch)->system_id;
-
-    $items = [];
-    if ($systemId) {
-        $items = Item::where('system_id', $systemId)
-            ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id')
-            ->toArray();
-    }
-
-    $currencies = Currency::all();
-
-    $player->load([
-        'user',
-        'branch',
-        'academy',
-        'nationality',
-        'sport',
-        'payments.branch',
-        'payments.paymentMethod',
-        'uniformRequests.item',
-        'uniformRequests.currency',
-    ]);
-
-    // If you prefer a sorted collection in the view:
-    $uniformRequests = $player->uniformRequests()
-        ->with(['item', 'currency'])
-        ->orderByDesc('created_at')
-        ->get();
-
-    return view('admin.player.show', compact('player', 'items', 'currencies', 'uniformRequests'));
-}
-
-
-
-
-
-
-    public function edit(Player $player)
+public function edit(Player $player)
     {
 
-         // dd($player);
+        // dd($player);
         // Check update permission
         if (!PermissionHelper::hasPermission('update', Player::MODEL_NAME)) {
             return PermissionHelper::denyAccessResponse();
@@ -427,8 +416,7 @@ public function show(Player $player)
         ));
     }
 
-
-    public function update(Request $request, Player $player)
+public function update(Request $request, Player $player)
     {
 
         if (!PermissionHelper::hasPermission('update', Player::MODEL_NAME)) {
@@ -506,8 +494,7 @@ public function show(Player $player)
             ->with('success', __('player.messages.player_updated_successfully'));
     }
 
-
-    public function destroy(Player $player)
+public function destroy(Player $player)
     {
         if (!PermissionHelper::hasPermission('delete', Player::MODEL_NAME)) {
             return PermissionHelper::denyAccessResponse();
@@ -553,102 +540,98 @@ public function show(Player $player)
         ]);
     }
 
-
-
-
 public function assignProgram(Request $request, $playerId)
-{
-    $messages = [
-        'program_id.required' => __('messages.select_program_required'),
-        'program_id.exists'   => __('messages.program_not_found'),
-        'class_ids.array'     => __('messages.invalid_class_format'),
-        'class_ids.*.exists'  => __('messages.invalid_class_selected'),
-    ];
+    {
+        $messages = [
+            'program_id.required' => __('messages.select_program_required'),
+            'program_id.exists'   => __('messages.program_not_found'),
+            'class_ids.array'     => __('messages.invalid_class_format'),
+            'class_ids.*.exists'  => __('messages.invalid_class_selected'),
+        ];
 
-    $validated = $request->validate([
-        'program_id'  => 'required|exists:programs,id',
-        'class_ids'   => 'nullable|array',
-        'class_ids.*' => 'integer|exists:class_models,id',
-    ], $messages);
+        $validated = $request->validate([
+            'program_id'  => 'required|exists:programs,id',
+            'class_ids'   => 'nullable|array',
+            'class_ids.*' => 'integer|exists:class_models,id',
+        ], $messages);
 
-    $player    = Player::findOrFail($playerId);
-    $programId = (int) $validated['program_id'];
-    $selectedClassIds = array_values(array_unique(array_map('intval', $validated['class_ids'] ?? [])));
+        $player    = Player::findOrFail($playerId);
+        $programId = (int) $validated['program_id'];
+        $selectedClassIds = array_values(array_unique(array_map('intval', $validated['class_ids'] ?? [])));
 
-    DB::transaction(function () use ($player, $programId, $selectedClassIds) {
+        DB::transaction(function () use ($player, $programId, $selectedClassIds) {
 
-        // --- 1) Upsert player_program (insert if missing, else touch updated_at)
-        $exists = $player->programs()->where('program_id', $programId)->exists();
+            // --- 1) Upsert player_program (insert if missing, else touch updated_at)
+            $exists = $player->programs()->where('program_id', $programId)->exists();
 
-        if (!$exists) {
-            // inserts row; withTimestamps() fills created_at & updated_at
-            $player->programs()->attach($programId);
-        } else {
-            // touches updated_at on the pivot row
-            $player->programs()->updateExistingPivot($programId, ['updated_at' => now()]);
+            if (!$exists) {
+                // inserts row; withTimestamps() fills created_at & updated_at
+                $player->programs()->attach($programId);
+            } else {
+                // touches updated_at on the pivot row
+                $player->programs()->updateExistingPivot($programId, ['updated_at' => now()]);
+            }
+
+            // --- 2) Refresh classes (only those that belong to this program)
+            $programClassIds = ClassModel::where('program_id', $programId)->pluck('id')->all();
+            if (!empty($programClassIds)) {
+                $player->classes()->detach($programClassIds);
+            }
+            if (!empty($selectedClassIds)) {
+                $player->classes()->attach($selectedClassIds);
+            }
+
+            // --- 3) Payment (full program if no classes; otherwise prorated)
+            $program    = Program::findOrFail($programId);
+            $classCount = count($selectedClassIds);
+
+            if ($classCount > 0 && (int)$program->class_count > 0) {
+                $perClass = ($program->is_offer_active && $program->offer_price)
+                    ? ((float)$program->offer_price / (int)$program->class_count)
+                    : ((float)$program->price       / (int)$program->class_count);
+
+                $basePrice = round($perClass * $classCount, 2);
+            } else {
+                $basePrice = (float)($program->is_offer_active && $program->offer_price
+                    ? $program->offer_price
+                    : $program->price);
+            }
+
+            $vatPercent = (float)($program->vat ?? 0);
+            $vatAmount  = round($basePrice * ($vatPercent / 100), 2);
+            $totalPrice = round($basePrice + $vatAmount, 2);
+
+            Payment::create([
+                'player_id'        => $player->id,
+                'program_id'       => $program->id,
+                'branch_id'        => $program->branch_id,
+                'academy_id'       => $program->academy_id,
+                'class_count'      => $classCount,
+                'base_price'       => $basePrice,
+                'vat_percent'      => $vatPercent,
+                'vat_amount'       => $vatAmount,
+                'total_price'      => $totalPrice,
+                'remaining_amount' => $totalPrice,
+                'currency'         => $program->currency ?? 'AED',
+                'status'           => 'pending',
+                'note'             => 'Auto-generated upon program assignment',
+                'items'            => json_encode(['class_ids' => $selectedClassIds]),
+            ]);
+        });
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('messages.program_assigned_successfully'),
+            ]);
         }
 
-        // --- 2) Refresh classes (only those that belong to this program)
-        $programClassIds = ClassModel::where('program_id', $programId)->pluck('id')->all();
-        if (!empty($programClassIds)) {
-            $player->classes()->detach($programClassIds);
-        }
-        if (!empty($selectedClassIds)) {
-            $player->classes()->attach($selectedClassIds);
-        }
-
-        // --- 3) Payment (full program if no classes; otherwise prorated)
-        $program    = Program::findOrFail($programId);
-        $classCount = count($selectedClassIds);
-
-        if ($classCount > 0 && (int)$program->class_count > 0) {
-            $perClass = ($program->is_offer_active && $program->offer_price)
-                ? ((float)$program->offer_price / (int)$program->class_count)
-                : ((float)$program->price       / (int)$program->class_count);
-
-            $basePrice = round($perClass * $classCount, 2);
-        } else {
-            $basePrice = (float)($program->is_offer_active && $program->offer_price
-                ? $program->offer_price
-                : $program->price);
-        }
-
-        $vatPercent = (float)($program->vat ?? 0);
-        $vatAmount  = round($basePrice * ($vatPercent / 100), 2);
-        $totalPrice = round($basePrice + $vatAmount, 2);
-
-        Payment::create([
-            'player_id'        => $player->id,
-            'program_id'       => $program->id,
-            'branch_id'        => $program->branch_id,
-            'academy_id'       => $program->academy_id,
-            'class_count'      => $classCount,
-            'base_price'       => $basePrice,
-            'vat_percent'      => $vatPercent,
-            'vat_amount'       => $vatAmount,
-            'total_price'      => $totalPrice,
-            'remaining_amount' => $totalPrice,
-            'currency'         => $program->currency ?? 'AED',
-            'status'           => 'pending',
-            'note'             => 'Auto-generated upon program assignment',
-            'items'            => json_encode(['class_ids' => $selectedClassIds]),
-        ]);
-    });
-
-    if ($request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'message' => __('messages.program_assigned_successfully'),
-        ]);
+        return redirect()
+            ->route('admin.players.index')
+            ->with('success', __('messages.program_assigned_successfully'));
     }
 
-    return redirect()
-        ->route('admin.players.index')
-        ->with('success', __('messages.program_assigned_successfully'));
-}
-
-
-    public function export()
+public function export()
     {
         return Excel::download(new \App\Exports\PlayersExport, 'players.xlsx');
     }

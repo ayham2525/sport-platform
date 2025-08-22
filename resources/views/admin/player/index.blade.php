@@ -1,5 +1,8 @@
 @php use App\Helpers\PermissionHelper; @endphp
 @extends('layouts.app')
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
 <style>
     .table-nowrap td,
     .table-nowrap th {
@@ -12,10 +15,12 @@
         text-overflow: ellipsis;
         max-width: 400px;
         /* adjust as needed */
-        font-size: 12px
+        font-size: 12px;
     }
 
 </style>
+@endpush
+
 @section('page_title')
 <h5 class="text-dark font-weight-bold my-2 mr-5">{{ __('player.titles.players') }}</h5>
 @endsection
@@ -37,8 +42,11 @@
         <div class="card card-custom gutter-b">
             <div class="card-header flex-wrap border-0 pt-6 pb-0">
                 <div class="card-title">
-                    <h3 class="card-label">{{ __('player.titles.players') }}
-                        <span class="d-block text-muted pt-2 font-size-sm">{{ __('player.titles.players_management') }}</span>
+                    <h3 class="card-label">
+                        {{ __('player.titles.players') }}
+                        <span class="d-block text-muted pt-2 font-size-sm">
+                            {{ __('player.titles.players_management') }}
+                        </span>
                     </h3>
                 </div>
                 <div class="card-toolbar">
@@ -95,7 +103,7 @@
                                 <option value="">{{ __('player.actions.select') }}</option>
                                 @foreach ($academies as $academy)
                                 <option value="{{ $academy->id }}" {{ request('academy_id') == $academy->id ? 'selected' : '' }}>
-                                    {{ $academy->name_en }}
+                                    {{ app()->getLocale()==='ar' ? ($academy->name_ar ?? $academy->name_en) : ($academy->name_en ?? $academy->name_ar) }}
                                 </option>
                                 @endforeach
                             </select>
@@ -113,12 +121,21 @@
                             </select>
                         </div>
 
+                        <div class="form-group col-md-2">
+                            <label>{{ __('player.fields.id') }}</label>
+                            <input type="number" name="player_id" class="form-control" placeholder="{{ __('player.fields.id') }}" value="{{ request('player_id') }}">
+                        </div>
+
+                        <div class="form-group col-md-3">
+                            <label>{{ __('player.fields.user_name') }}</label>
+                            <input type="text" name="user_name" class="form-control" placeholder="{{ __('player.fields.user_name') }}" value="{{ request('user_name') }}">
+                        </div>
+
                         <div class="form-group col-md-3">
                             <label>{{ __('player.fields.player_code') }}</label>
                             <input type="text" name="search" class="form-control" placeholder="{{ __('player.fields.player_code') }}" value="{{ request('search') }}">
                         </div>
 
-                        <!-- زر الفلترة -->
                         <div class="form-group col-md-2">
                             <button type="submit" class="btn btn-info btn-block">
                                 <i class="la la-filter"></i> {{ __('player.actions.filter') }}
@@ -140,19 +157,30 @@
         </div>
     </div>
 </div>
-<!-- 1. Assign Program Modal -->
-<!-- Assign Program Modal -->
 
-@include('admin.player.partials.assignProgram');
+{{-- Assign Program Modal --}}
+@include('admin.player.partials.assignProgram')
+@endsection
 
-
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('.select2').select2();
+    $(function() {
+        if ($.fn.select2) {
+            $('.select2').select2({
+                width: '100%'
+                , placeholder: @json(__('player.actions.select'))
+                , allowClear: true
+                , dir: @json(app() - > getLocale() === 'ar' ? 'rtl' : 'ltr')
+            });
+        } else {
+            console.warn('Select2 not found on page.');
+        }
     });
 
+</script>
+
+<script>
     (function() {
         const $system = $('#system_id');
         const $branch = $('#branch_id');
@@ -160,20 +188,6 @@
 
         const placeholderText = @json(__('player.actions.select'));
 
-        // Initialize Select2 if present
-        if (typeof $.fn.select2 === 'function') {
-            $('.select2').select2({
-                placeholder: placeholderText
-                , allowClear: true
-            });
-        }
-
-        // Named route templates (inside admin group => final name is "admin.getAcademiesByBranch")
-        const academiesByBranchUrlTpl = @json(route('admin.getAcademiesByBranch', ['branch_id' => '__ID__']));
-        // (Optional) if you also cascade System -> Branch, keep this:
-        const branchesBySystemUrlTpl = @json(route('admin.getBranchesBySystem', ['system_id' => '__ID__']));
-
-        // Helpers
         function resetSelect($el) {
             $el.empty().append(new Option(placeholderText, ''));
             if ($el.hasClass('select2')) $el.trigger('change.select2');
@@ -182,20 +196,26 @@
 
         function setLoading($el) {
             $el.empty().append(new Option(placeholderText, ''));
-            $el.append(new Option('Loading...', '', true, true));
+            $el.append(new Option(@json(__('player.actions.loading')), '', true, true));
             if ($el.hasClass('select2')) $el.trigger('change.select2');
             $el.prop('disabled', true);
         }
 
         function populateSelect($el, items, textKey, selectedValue = '') {
             $el.empty().append(new Option(placeholderText, ''));
-            items.forEach(i => $el.append(new Option(i[textKey], i.id)));
+            items.forEach(i => {
+                const text = i[textKey] || i.name || i.name_en || i.name_ar || ('#' + i.id);
+                $el.append(new Option(text, i.id));
+            });
             if (selectedValue) $el.val(String(selectedValue));
             if ($el.hasClass('select2')) $el.trigger('change.select2');
             $el.prop('disabled', false);
         }
 
-        // --- MAIN: Load academies for a given branch ---
+        // ✅ Use the actual route names you registered
+        const academiesByBranchUrlTpl = @json(route('admin.getAcademiesByBranch', ['branch_id' => '__ID__']));
+        const branchesBySystemUrlTpl = @json(route('admin.getBranchesBySystem', ['system_id' => '__ID__']));
+
         function loadAcademiesByBranch(branchId, preselect = '') {
             if (!branchId) {
                 resetSelect($academy);
@@ -206,8 +226,9 @@
             fetch(url)
                 .then(r => r.json())
                 .then(list => {
-                    // Your API returns [{ id, name_en }]
-                    populateSelect($academy, list, 'name_en', preselect);
+                    // API returns: [{ id, name_en }]
+                    const nameKey = @json(app() - > getLocale() === 'ar' ? 'name_ar' : 'name_en');
+                    populateSelect($academy, list, nameKey, preselect);
                 })
                 .catch(() => {
                     resetSelect($academy);
@@ -215,7 +236,6 @@
                 });
         }
 
-        // (Optional) If you also want System -> Branch cascade
         function loadBranchesBySystem(systemId, preselect = '') {
             if (!systemId) {
                 resetSelect($branch);
@@ -227,10 +247,7 @@
             const url = branchesBySystemUrlTpl.replace('__ID__', systemId);
             return fetch(url)
                 .then(r => r.json())
-                .then(list => {
-                    // Expecting [{ id, name }]
-                    populateSelect($branch, list, 'name', preselect);
-                })
+                .then(list => populateSelect($branch, list, 'name', preselect))
                 .catch(() => {
                     resetSelect($branch);
                     console.error('Failed to load branches for system', systemId);
@@ -242,70 +259,18 @@
             loadAcademiesByBranch(this.value);
         });
 
-        // If you also handle system -> branch
         $system.on('change', function() {
+            // Only if you want System -> Branch cascade
             loadBranchesBySystem(this.value);
         });
 
-        // Rehydrate on initial load (preserve filters on refresh/back)
+        // Rehydrate on first load (preserve filters)
         const initialBranch = $branch.val();
         const initialAcademy = @json((string) request('academy_id'));
         if (initialBranch) {
             loadAcademiesByBranch(initialBranch, initialAcademy);
         }
-
-        // Optional: expose your code generator if you use it
-        window.generatePlayerCode = function() {
-            const prefix = 'PLY-';
-            const random = Math.floor(Math.random() * 900000 + 100000);
-            const el = document.getElementById('player_code');
-            if (el) el.value = `${prefix}${random}`;
-        };
     })();
-
-    $(document).on('click', '.delete-button', function(e) {
-        e.preventDefault();
-        let form = $(this).closest('form');
-        let playerId = form.data('id');
-
-        Swal.fire({
-            title: "{{ __('messages.confirm_delete') }}"
-            , text: "{{ __('messages.delete_warning') }}"
-            , icon: "warning"
-            , showCancelButton: true
-            , confirmButtonText: "{{ __('messages.yes_delete') }}"
-            , cancelButtonText: "{{ __('messages.cancel') }}"
-        , }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: form.attr('action')
-                    , type: 'POST'
-                    , data: form.serialize()
-                    , success: function(response) {
-                        Swal.fire({
-                            icon: 'success'
-                            , title: "{{ __('messages.deleted') }}"
-                            , text: "{{ __('player.messages.player_deleted_successfully') }}"
-                            , timer: 2000
-                            , showConfirmButton: false
-                        });
-
-                        // remove row dynamically
-                        form.closest('tr').fadeOut(500, function() {
-                            $(this).remove();
-                        });
-                    }
-                    , error: function(xhr) {
-                        Swal.fire({
-                            icon: 'error'
-                            , title: "{{ __('messages.error') }}"
-                            , text: xhr.responseJSON ? .message || "{{ __('messages.something_went_wrong') }}"
-                        , });
-                    }
-                });
-            }
-        });
-    });
 
 </script>
 
@@ -331,7 +296,6 @@
         const $priceVat = $('#price_vat');
         const $priceTot = $('#price_total');
 
-        // ---------- i18n (with safe fallbacks if keys missing) ----------
         const TXT = {
             select: @json(__('player.actions.select'))
             , loading: @json(__('player.actions.loading'))
@@ -341,10 +305,9 @@
             , somethingWrong: @json(__('messages.something_went_wrong'))
             , done: @json(__('messages.done'))
             , error: @json(__('messages.error'))
-        };
+        , };
         Object.keys(TXT).forEach(k => {
             if (typeof TXT[k] === 'string' && TXT[k].includes('.')) {
-                // raw key leaked from lang -> use readable fallback
                 if (k === 'noPrograms') TXT[k] = 'No available programs';
                 if (k === 'noClasses') TXT[k] = 'No classes found';
                 if (k === 'selectProgramFirst') TXT[k] = 'Select a program first';
@@ -352,7 +315,6 @@
             }
         });
 
-        // ---------- Helpers ----------
         function showLoader() {
             $loader.show();
             $content.hide();
@@ -374,10 +336,12 @@
         function resetProgramSelect() {
             $program.prop('disabled', false).empty()
                 .append(new Option(TXT.select, ''));
+            if ($.fn.select2) $program.trigger('change.select2');
         }
 
         function resetClassesSelect() {
             $classes.prop('disabled', true).empty();
+            if ($.fn.select2) $classes.trigger('change.select2');
         }
 
         function setPrices(base = 0, vatAmt = 0, total = 0) {
@@ -385,6 +349,7 @@
             $priceVat.text(Number(vatAmt).toFixed(2));
             $priceTot.text(Number(total).toFixed(2));
         }
+
         // item: { price: "419.00", vat: "5.00", ... }
         function computeTotalsFromItem(item) {
             const base = Number(item.price ? ? 0);
@@ -397,7 +362,7 @@
             };
         }
 
-        // ---------- Open modal & load programs ----------
+        // Open modal
         $(document).on('click', '.assign-program-btn', function() {
             const playerId = $(this).data('player-id');
             $playerId.val(playerId);
@@ -405,6 +370,17 @@
             setPrices(0, 0, 0);
             resetProgramSelect();
             resetClassesSelect();
+
+            // Select2 inside modal
+            if ($.fn.select2) {
+                $('#assignProgramModal .select2').select2({
+                    width: '100%'
+                    , dropdownParent: $modal
+                    , placeholder: TXT.select
+                    , allowClear: true
+                    , dir: @json(app() - > getLocale() === 'ar' ? 'rtl' : 'ltr')
+                });
+            }
 
             $classes.prop('disabled', true)
                 .append(new Option(TXT.selectProgramFirst, '', true, true));
@@ -414,29 +390,23 @@
 
             $.getJSON(url)
                 .done(function(resp) {
-                    // FIX: accept both array and {programs:[...]}
                     const list = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.programs) ? resp.programs : []);
                     resetProgramSelect();
 
-                    if (list.length === 0) {
-                        $program.append(new Option(TXT.noPrograms, '', true, true));
-                        $program.prop('disabled', true);
+                    if (!list.length) {
+                        $program.append(new Option(TXT.noPrograms, '', true, true)).prop('disabled', true);
                         showContent();
                         return;
                     }
 
                     list.forEach(p => {
-                        const text = {
-                            {
-                                app() - > getLocale() === 'ar' ? '(p.name_ar || p.name_en)' : '(p.name_en || p.name_ar)'
-                            }
-                        };
+                        const text = @json(app() - > getLocale() === 'ar') ? (p.name_ar || p.name_en) : (p.name_en || p.name_ar);
                         const opt = new Option(text, p.id);
-                        // stash original program object for price computation later
                         $(opt).data('program', p);
                         $program.append(opt);
                     });
 
+                    if ($.fn.select2) $program.trigger('change.select2');
                     showContent();
                 })
                 .fail(function(xhr) {
@@ -446,10 +416,10 @@
                     $program.prop('disabled', true);
                 });
 
-            $modal.modal('show'); // Bootstrap 4
+            $modal.modal('show');
         });
 
-        // ---------- On program change: prices + classes ----------
+        // On program change: compute price + load classes
         $program.on('change', function() {
             clearError();
             setPrices(0, 0, 0);
@@ -458,19 +428,17 @@
             const programId = $(this).val();
             if (!programId) return;
 
-            // prices
             const optData = $('option:selected', this).data('program') || {};
             const totals = computeTotalsFromItem(optData);
             setPrices(totals.base, totals.vatAmt, totals.total);
 
-            // classes
             const url = classesUrlTpl.replace('__PROGRAM__', programId);
             $classes.prop('disabled', true).append(new Option(TXT.loading + '...', '', true, true));
 
             $.getJSON(url)
                 .done(function(list) {
                     $classes.empty();
-                    if (!Array.isArray(list) || list.length === 0) {
+                    if (!Array.isArray(list) || !list.length) {
                         $classes.prop('disabled', true)
                             .append(new Option(TXT.noClasses, '', true, true));
                         return;
@@ -480,6 +448,7 @@
                         $classes.append(new Option(label, c.id));
                     });
                     $classes.prop('disabled', false);
+                    if ($.fn.select2) $classes.trigger('change.select2');
                 })
                 .fail(function(xhr) {
                     console.error('classes fetch failed:', xhr.status, xhr.responseText);
@@ -488,7 +457,7 @@
                 });
         });
 
-        // ---------- Submit assign ----------
+        // Submit assign
         $form.on('submit', function(e) {
             e.preventDefault();
             clearError();
@@ -496,7 +465,6 @@
             const playerId = $playerId.val();
             const action = assignUrlTpl.replace('__PLAYER__', playerId);
             const payload = $form.serialize();
-
             const $submit = $form.find('button[type=submit]').prop('disabled', true);
 
             $.ajax({
@@ -508,7 +476,7 @@
                         , 'Accept': 'application/json'
                     }
                 })
-                .done(function(resp) {
+                .done(function() {
                     if (window.Swal) {
                         Swal.fire({
                             icon: 'success'
@@ -533,13 +501,46 @@
                     $submit.prop('disabled', false);
                 });
         });
+
+        // Delete player (existing code, with tiny fix)
+        $(document).on('click', '.delete-button', function(e) {
+            e.preventDefault();
+            const form = $(this).closest('form');
+
+            Swal.fire({
+                title: @json(__('messages.confirm_delete'))
+                , text: @json(__('messages.delete_warning'))
+                , icon: 'warning'
+                , showCancelButton: true
+                , confirmButtonText: @json(__('messages.yes_delete'))
+                , cancelButtonText: @json(__('messages.cancel'))
+            , }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post(form.attr('action'), form.serialize())
+                        .done(function() {
+                            Swal.fire({
+                                icon: 'success'
+                                , title: @json(__('messages.deleted'))
+                                , text: @json(__('player.messages.player_deleted_successfully'))
+                                , timer: 2000
+                                , showConfirmButton: false
+                            });
+                            form.closest('tr').fadeOut(500, function() {
+                                $(this).remove();
+                            });
+                        })
+                        .fail(function(xhr) {
+                            Swal.fire({
+                                icon: 'error'
+                                , title: @json(__('messages.error'))
+                                , text: (xhr.responseJSON && xhr.responseJSON.message) || @json(__('messages.something_went_wrong'))
+                            });
+                        });
+                }
+            });
+        });
     });
 
 </script>
-
-
-
-
-
-@endsection
+@endpush
 

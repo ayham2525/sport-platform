@@ -91,6 +91,7 @@ return [
         'payment_method'     => 'طريقة الدفع',
         'card_serial_number'    => 'الرقم التسلسلي للبطاقة',
         'program' => 'البرنامج',
+        'user_name' => 'اسم اللاعب',
     ],
 
     'status' => [
