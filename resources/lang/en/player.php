@@ -41,6 +41,7 @@ return [
     ],
 
     'fields' => [
+        'id' => 'ID',
         'name' => 'Name',
         'email' => 'Email',
         'birth_date' => 'Birth Date',

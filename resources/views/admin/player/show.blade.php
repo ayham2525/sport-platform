@@ -100,17 +100,30 @@
                         {{ $player->created_at->format('Y-m-d H:i') }}</p>
                 </div>
                 <div class="col-lg-6">
-                    <p><i class="la la-building"></i> <strong>{{ __('player.fields.branch') }}:</strong>
-                        {{ $player->branch->name ?? '-' }}</p>
-                    <p><i class="la la-university"></i> <strong>{{ __('player.fields.academy') }}:</strong>
-                        {{ $player->academy->name_en ?? '-' }}</p>
-                    <p><i class="la la-flag"></i> <strong>{{ __('player.fields.nationality') }}:</strong>
-                        {{ $player->nationality->name_en ?? '-' }}</p>
-                    <p><i class="la la-futbol"></i> <strong>{{ __('player.fields.sport') }}:</strong>
-                        {{ $player->sport->name_en ?? '-' }}</p>
-                    <p><i class="la la-code"></i> <strong>{{ __('player.fields.player_code') }}:</strong>
-                        {{ $player->player_code }}</p>
-                </div>
+    <p><i class="la la-building"></i> <strong>{{ __('player.fields.branch') }}:</strong>
+        {{ $player->branch->name ?? '-' }}</p>
+
+    <p><i class="la la-university"></i> <strong>{{ __('player.fields.academy') }}:</strong>
+        {{ $player->academy->name_en ?? '-' }}</p>
+
+    <p><i class="la la-flag"></i> <strong>{{ __('player.fields.nationality') }}:</strong>
+        {{ $player->nationality->name_en ?? '-' }}</p>
+
+    <p><i class="la la-futbol"></i> <strong>{{ __('player.fields.sport') }}:</strong>
+        {{ $player->sport->name_en ?? '-' }}</p>
+
+    <p><i class="la la-code"></i> <strong>{{ __('player.fields.player_code') }}:</strong>
+        {{ $player->player_code }}</p>
+
+    <p><i class="la la-cube"></i> <strong>{{ __('player.fields.program') }}:</strong>
+        @if($player->programs->count())
+            {{ $player->programs->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en')->join(', ') }}
+        @else
+            -
+        @endif
+    </p>
+</div>
+
             </div>
         </div>
 
@@ -375,16 +388,18 @@
                                     <td>{{ $payment->reset_number ?? '-' }}</td>
                                     <td>{{ $payment->paymentMethod->name ?? '-' }}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-clean text-primary edit-payment-btn"
-                                            data-id="{{ $payment->id }}" data-toggle="modal"
-                                            data-target="#paymentModal" title="{{ __('player.actions.edit') }}">
-                                            <i class="la la-edit"></i>
-                                        </button>
-                                        <a href="{{ route('admin.payments.show', $payment->id) }}"
+                                        <a href="{{ route('admin.payments.edit', $payment->id) }}"
+                                            class="btn btn-sm btn-clean text-primary"
+                                            title="{{ __('player.actions.edit') }}">
+                                                <i class="la la-edit"></i>
+                                            </a>
+
+                                            <a href="{{ route('admin.payments.show', $payment->id) }}"
                                             class="btn btn-sm btn-clean text-info"
                                             title="{{ __('player.actions.view') }}">
-                                            <i class="la la-eye"></i>
-                                        </a>
+                                                <i class="la la-eye"></i>
+                                            </a>
+
                                     </td>
                                 </tr>
                             @endforeach

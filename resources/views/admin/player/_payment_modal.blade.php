@@ -86,6 +86,13 @@
             <input type="number" step="0.01" name="discount" class="form-control">
           </div>
           <div class="col">
+            <label><i class="la la-percent"></i> {{ __('payment.fields.is_vat_inclusive') }}</label>
+            <select name="is_vat_inclusive" class="form-control" required>
+              <option value="1">{{ __('payment.vat.inclusive') }}</option>
+              <option value="0">{{ __('payment.vat.exclusive') }}</option>
+            </select>
+          </div>
+          <div class="col">
             <label><i class="la la-barcode"></i> {{ __('player.fields.reset_number') }}</label>
             <input type="text" name="reset_number" class="form-control">
           </div>

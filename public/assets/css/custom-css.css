@@ -52,3 +52,17 @@
 .event-action-menu {
     border-radius: 4px;
 }
+
+    .table-nowrap td,
+    .table-nowrap th {
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+    }
+
+    .table-nowrap td {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 400px;
+        /* adjust as needed */
+        font-size: 12px !important
+    }
