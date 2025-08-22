@@ -93,12 +93,14 @@ return [
         'card_serial_number'    => 'Card Serial Number',
         'program' => 'Program',
         'user_name' => 'Player Name',
+        'player_status' => 'Player Status',
 
     ],
      'status' => [
         'title'   => 'Status',
         'active'  => 'Active',
         'expired' => 'Expired',
+        'stopped' => 'Stopped',
     ],
 
     'actions' => [

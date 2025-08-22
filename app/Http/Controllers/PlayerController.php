@@ -445,6 +445,8 @@ public function update(Request $request, Player $player)
             'guardian_phone'    => 'nullable|string|max:50',
             'medical_notes'     => 'nullable|string|max:1000',
             'remarks'           => 'nullable|string|max:1000',
+            'status'            => 'required|in:active,expired,stopped',
+
         ]);
 
         // Normalize academy_id
@@ -487,6 +489,7 @@ public function update(Request $request, Player $player)
             'guardian_phone'   => $request->guardian_phone,
             'medical_notes'    => $request->medical_notes,
             'remarks'          => $request->remarks,
+            'status'           => $request->status,
         ]);
 
         return redirect()

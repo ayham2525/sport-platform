@@ -92,12 +92,14 @@ return [
         'card_serial_number'    => 'الرقم التسلسلي للبطاقة',
         'program' => 'البرنامج',
         'user_name' => 'اسم اللاعب',
+        'player_status' => 'حالة اللاعب',
     ],
 
     'status' => [
         'title'   => 'الحالة',
         'active'  => 'نشط',
         'expired' => 'منتهي',
+        'stopped' => 'متوقف',
     ],
 
     'actions' => [

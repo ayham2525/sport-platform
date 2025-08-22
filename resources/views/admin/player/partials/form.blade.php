@@ -192,6 +192,21 @@
             <input type="text" name="previous_academy" class="form-control" maxlength="100" value="{{ old('previous_academy', $player->previous_academy) }}" placeholder="{{ __('player.placeholders.previous_academy') }}">
         </div>
 
+
+        <!-- Player Status -->
+<div class="form-group">
+    <label>
+        <i class="fas fa-id-card-alt text-secondary mr-1"></i>
+        {{ __('player.fields.player_status') }}
+    </label>
+    <select name="status" class="form-control" required>
+        @php $ps = old('status', $player->status ?? 'active'); @endphp
+        <option value="active"  {{ $ps === 'active'  ? 'selected' : '' }}>{{ __('player.status.active') }}</option>
+        <option value="expired" {{ $ps === 'expired' ? 'selected' : '' }}>{{ __('player.status.expired') }}</option>
+        <option value="stopped" {{ $ps === 'stopped' ? 'selected' : '' }}>{{ __('player.status.stopped') }}</option>
+    </select>
+</div>
+
     </div>
 
     <div class="col-md-6">
