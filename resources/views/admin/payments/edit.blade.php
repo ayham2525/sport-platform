@@ -19,7 +19,7 @@
 @endsection
 
 @section('content')
- <div class="card card-custom">
+<div class="card card-custom">
     <div class="card-body">
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -30,22 +30,29 @@
                 </ul>
             </div>
         @endif
+
         <form method="POST" action="{{ route('admin.payments.update', $payment->id) }}">
             @csrf
             @method('PUT')
 
-            <input name="items" type="hidden"  id="items-json" value="{{ $payment->items }}">
+            <input name="items" type="hidden" id="items-json" value="{{ $payment->items }}">
             <input type="hidden" id="selected-classes" name="classes">
+
             <div class="row">
+                {{-- System --}}
                 <div class="form-group col-md-4">
                     <label><i class="la la-network-wired text-muted mr-1"></i> {{ __('payment.filters.select_system') }}</label>
                     <select class="form-control" required disabled>
                         @foreach ($systems as $system)
-                            <option value="{{ $system->id }}" {{ $payment->system_id == $system->id ? 'selected' : '' }}>{{ $system->name }}</option>
+                            <option value="{{ $system->id }}" {{ $payment->system_id == $system->id ? 'selected' : '' }}>
+                                {{ $system->name }}
+                            </option>
                         @endforeach
                     </select>
                     <input type="hidden" id="system_id" name="system_id" value="{{ $payment->system_id }}">
                 </div>
+
+                {{-- Branch --}}
                 <div class="form-group col-md-4">
                     <label><i class="la la-building text-muted mr-1"></i> {{ __('payment.filters.select_branch') }}</label>
                     <select name="branch_id" id="branch_id" class="form-control" disabled>
@@ -55,6 +62,8 @@
                     </select>
                     <input type="hidden" id="branch_id" name="branch_id" value="{{ $payment->branch_id }}">
                 </div>
+
+                {{-- Academy --}}
                 <div class="form-group col-md-4">
                     <label><i class="la la-university text-muted mr-1"></i> {{ __('payment.filters.select_academy') }}</label>
                     <select name="academy_id" id="academy_id" class="form-control" disabled>
@@ -64,20 +73,28 @@
                     </select>
                     <input type="hidden" id="academy_id" name="academy_id" value="{{ $payment->academy_id }}">
                 </div>
+
+                {{-- Category --}}
                 <div class="form-group col-md-4">
                     <label><i class="la la-list text-muted mr-1"></i> {{ __('payment.fields.category') }}</label>
                     <select class="form-control" required disabled>
                         @foreach (\App\Models\Payment::CATEGORIES as $key => $value)
-                            <option value="{{ $key }}" {{ $payment->category == $key ? 'selected' : '' }}>{{ __('payment.categories.' . $key) }}</option>
+                            <option value="{{ $key }}" {{ $payment->category == $key ? 'selected' : '' }}>
+                                {{ __('payment.categories.' . $key) }}
+                            </option>
                         @endforeach
                     </select>
                     <input type="hidden" name="category" value="{{ $payment->category }}">
                 </div>
+
+                {{-- Player --}}
                 <div class="form-group col-md-4" id="player-dev" style="display:none;">
                     <label><i class="la la-user text-muted mr-1"></i> {{ __('payment.fields.player') }}</label>
                     <select class="form-control" disabled data-selected="{{ $payment->player_id }}"></select>
                     <input type="hidden" id="player_id" name="player_id" value="{{ $payment->player_id }}">
                 </div>
+
+                {{-- Program --}}
                 <div class="form-group col-md-4" id="program-dev" style="display:none;">
                     <label><i class="la la-cube text-muted mr-1"></i> {{ __('payment.fields.program') }}</label>
                     <select name="program_id" id="program_id" class="form-control" disabled>
@@ -87,76 +104,127 @@
                     </select>
                     <input type="hidden" id="program_id" name="program_id" value="{{ $payment->program_id }}">
                 </div>
+
+                {{-- Classes --}}
                 <div class="form-group col-md-12" id="classes-dev" style="display:none;">
                     <label><i class="la la-list-alt text-muted mr-1"></i> {{ __('payment.fields.classes') }}</label>
                     <select id="classes-select" class="form-control" multiple name="classes[]" disabled></select>
                 </div>
+
+                {{-- Class Count --}}
                 <div class="form-group col-md-3" id="class-dev" style="display:none;">
                     <label><i class="la la-calculator text-muted mr-1"></i> {{ __('payment.fields.class_count') }}</label>
                     <input type="number" name="class_count" class="form-control" disabled value="{{ $payment->class_count }}">
                 </div>
+
+                {{-- NEW: Payment Dates --}}
+                <div class="form-group col-md-3">
+                    <label><i class="la la-calendar text-muted mr-1"></i> {{ __('player.fields.payment_date') }}</label>
+                    <input type="date" name="payment_date" class="form-control"
+                           value="{{ optional($payment->payment_date)->format('Y-m-d') }}">
+                </div>
+                <div class="form-group col-md-3">
+                    <label><i class="la la-hourglass-start text-muted mr-1"></i> {{ __('player.fields.start_date') }}</label>
+                    <input type="date" name="start_date" class="form-control"
+                           value="{{ optional($payment->start_date)->format('Y-m-d') }}">
+                </div>
+                <div class="form-group col-md-3">
+                    <label><i class="la la-hourglass-end text-muted mr-1"></i> {{ __('player.fields.end_date') }}</label>
+                    <input type="date" name="end_date" class="form-control"
+                           value="{{ optional($payment->end_date)->format('Y-m-d') }}">
+                </div>
+
+                {{-- Prices / VAT --}}
                 <div class="form-group col-md-3">
                     <label><i class="la la-money text-muted mr-1"></i> {{ __('payment.fields.base_price') }}</label>
-                    <input type="number" name="base_price" class="form-control" step="0.01" value="{{ $payment->base_price }}" required>
+                    <input type="number" name="base_price" class="form-control" step="0.01"
+                           value="{{ $payment->base_price }}" required>
                 </div>
+
                 <div class="form-group col-md-3">
                     <label><i class="la la-percent text-muted mr-1"></i> {{ __('payment.fields.vat_percent') }}</label>
-                    <input type="number" name="vat_percent" class="form-control" step="0.01" value="{{ $payment->vat_percent }}">
+                    <input type="number" name="vat_percent" class="form-control" step="0.01"
+                           value="{{ $payment->vat_percent }}">
                 </div>
+
                 <div class="form-group col-md-3">
-                <label><i class="la la-file-invoice-dollar text-muted mr-1"></i> {{ __('payment.fields.is_vat_inclusive') }}</label>
-                <select name="is_vat_inclusive" class="form-control" required>
-                    <option value="1" {{ $payment->is_vat_inclusive ? 'selected' : '' }}>
-                        {{ __('payment.vat.inclusive') }}
-                    </option>
-                    <option value="0" {{ !$payment->is_vat_inclusive ? 'selected' : '' }}>
-                        {{ __('payment.vat.exclusive') }}
-                    </option>
-                </select>
-            </div>
+                    <label><i class="la la-file-invoice-dollar text-muted mr-1"></i> {{ __('payment.fields.is_vat_inclusive') }}</label>
+                    <select name="is_vat_inclusive" class="form-control" required>
+                        <option value="1" {{ $payment->is_vat_inclusive ? 'selected' : '' }}>
+                            {{ __('payment.vat.inclusive') }}
+                        </option>
+                        <option value="0" {{ !$payment->is_vat_inclusive ? 'selected' : '' }}>
+                            {{ __('payment.vat.exclusive') }}
+                        </option>
+                    </select>
+                </div>
+
                 <div class="form-group col-md-3">
                     <label><i class="la la-calculator text-muted mr-1"></i> {{ __('payment.fields.total_price') }}</label>
-                    <input type="number" name="total_price" class="form-control" step="0.01" value="{{ $payment->total_price }}" required>
+                    <input type="number" name="total_price" class="form-control" step="0.01"
+                           value="{{ $payment->total_price }}" required>
                 </div>
+
+                {{-- Amounts --}}
                 <div class="form-group col-md-3">
                     <label><i class="la la-money-bill text-muted mr-1"></i> {{ __('payment.fields.paid_amount') }}</label>
-                    <input type="number" name="paid_amount" class="form-control" step="0.01" value="{{ $payment->paid_amount }}" required>
+                    <input type="number" name="paid_amount" class="form-control" step="0.01"
+                           value="{{ $payment->paid_amount }}" required>
                 </div>
                 <div class="form-group col-md-3">
                     <label><i class="la la-balance-scale text-muted mr-1"></i> {{ __('payment.fields.remaining_amount') }}</label>
-                    <input type="number" name="remaining_amount" class="form-control" step="0.01" value="{{ $payment->remaining_amount }}" readonly>
+                    <input type="number" name="remaining_amount" class="form-control" step="0.01"
+                           value="{{ $payment->remaining_amount }}" readonly>
                 </div>
+
+                {{-- Currency --}}
                 <div class="form-group col-md-3">
                     <label><i class="la la-coins text-muted mr-1"></i> {{ __('payment.fields.currency') }}</label>
                     <select class="form-control" required disabled>
-                        <option value="" disabled {{ empty($payment->currency) ? 'selected' : '' }}>{{ __('payment.filters.select') }}</option>
+                        <option value="" disabled {{ empty($payment->currency) ? 'selected' : '' }}>
+                            {{ __('payment.filters.select') }}
+                        </option>
                         @foreach ($currencies as $currency)
-                            <option value="{{ $currency->code }}" {{ $payment->currency == $currency->code ? 'selected' : '' }}>{{ $currency->code }}</option>
+                            <option value="{{ $currency->code }}" {{ $payment->currency == $currency->code ? 'selected' : '' }}>
+                                {{ $currency->code }}
+                            </option>
                         @endforeach
                     </select>
                     <input id="currency" name="currency" hidden value="{{ $payment->currency }}">
                 </div>
+
+                {{-- Status --}}
                 <div class="form-group col-md-3">
                     <label><i class="la la-flag text-muted mr-1"></i> {{ __('payment.fields.status') }}</label>
                     <select name="status" class="form-control" required>
                         @foreach (['pending', 'partial', 'paid'] as $status)
-                            <option value="{{ $status }}" {{ $payment->status == $status ? 'selected' : '' }}>{{ __('payment.status.' . $status) }}</option>
+                            <option value="{{ $status }}" {{ $payment->status == $status ? 'selected' : '' }}>
+                                {{ __('payment.status.' . $status) }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
+
+                {{-- Payment Method --}}
                 <div class="form-group col-md-3">
                     <label><i class="la la-credit-card text-muted mr-1"></i> {{ __('payment.fields.payment_method') }}</label>
                     <select name="payment_method_id" class="form-control" required>
                         @foreach ($paymentMethods as $method)
-                            <option value="{{ $method->id }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>{{ $method->name }}</option>
+                            <option value="{{ $method->id }}" {{ $payment->payment_method_id == $method->id ? 'selected' : '' }}>
+                                {{ $method->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
+
+                {{-- Note --}}
                 <div class="form-group col-md-12">
                     <label><i class="la la-sticky-note text-muted mr-1"></i> {{ __('payment.fields.note') }}</label>
                     <textarea name="note" class="form-control" rows="3">{{ $payment->note }}</textarea>
                 </div>
             </div>
+
+            {{-- Items --}}
             <div class="form-group col-md-12">
                 <label><i class="la la-boxes text-muted mr-1"></i> {{ __('payment.fields.items') }}</label>
                 <table class="table table-bordered" id="items-table">
@@ -168,14 +236,14 @@
                             <th>{{ __('payment.fields.actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
-
-                    </tbody>
+                    <tbody></tbody>
                 </table>
                 <button type="button" class="btn btn-sm btn-primary" id="add-item">
                     <i class="la la-plus"></i> {{ __('payment.actions.add_item') }}
                 </button>
             </div>
+
+            {{-- Actions --}}
             <div class="text-right">
                 <button type="submit" class="btn btn-success">
                     <i class="la la-save mr-1"></i> {{ __('payment.actions.update') }}
@@ -187,6 +255,7 @@
         </form>
     </div>
 </div>
+
 
 @endsection
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

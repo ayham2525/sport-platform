@@ -226,35 +226,38 @@ public function create()
 public function store(Request $request)
 {
     $request->validate([
-        'category' => 'required|in:program,uniform,asset,camp,class',
-        'program_id' => 'nullable|exists:programs,id',
-        'player_id' => 'nullable|exists:players,id',
-        'branch_id' => 'nullable|integer',
-        'academy_id' => 'nullable|integer',
-        'system_id' => 'nullable|integer',
-        'class_count' => 'nullable|numeric|min:0',
-        'total_price' => 'required|numeric|min:0',
-        'paid_amount' => 'required|numeric|min:0',
-        'base_price' => 'required|numeric|min:0',
-        'vat_percent' => 'nullable|numeric|min:0',
-        'is_vat_inclusive' => 'required|boolean',
-        'payment_method_id' => 'required|exists:payment_methods,id',
-        'currency' => 'required|string|max:3',
-        'classes' => 'nullable|array',
-        'classes.*' => 'integer|exists:class_models,id',
+        'category'           => 'required|in:program,uniform,asset,camp,class',
+        'program_id'         => 'nullable|exists:programs,id',
+        'player_id'          => 'nullable|exists:players,id',
+        'branch_id'          => 'nullable|integer',
+        'academy_id'         => 'nullable|integer',
+        'system_id'          => 'nullable|integer',
+        'class_count'        => 'nullable|numeric|min:0',
+        'total_price'        => 'required|numeric|min:0',
+        'paid_amount'        => 'required|numeric|min:0',
+        'base_price'         => 'required|numeric|min:0',
+        'vat_percent'        => 'nullable|numeric|min:0',
+        'is_vat_inclusive'   => 'required|boolean',
+        'payment_method_id'  => 'required|exists:payment_methods,id',
+        'currency'           => 'required|string|max:3',
+        'classes'            => 'nullable|array',
+        'classes.*'          => 'integer|exists:class_models,id',
+        'payment_date'       => 'nullable|date',
+        'start_date'         => 'nullable|date',
+        'end_date'           => 'nullable|date|after_or_equal:start_date',
     ]);
 
     $baseCurrency = config('app.base_currency', 'AED');
 
     // Inputs (original currency)
-    $originalCurrency   = strtoupper($request->currency);
-    $vatPercent         = (float) ($request->vat_percent ?? 0);
-    $isVatInclusive     = (bool) $request->is_vat_inclusive;
+    $originalCurrency = strtoupper($request->currency);
+    $vatPercent       = (float) ($request->vat_percent ?? 0);
+    $isVatInclusive   = (bool) $request->is_vat_inclusive;
 
     // Start with user-entered numbers
-    $enteredBase   = (float) $request->base_price;
-    $enteredTotal  = (float) $request->total_price;
-    $enteredPaid   = (float) $request->paid_amount;
+    $enteredBase  = (float) $request->base_price;
+    $enteredTotal = (float) $request->total_price;
+    $enteredPaid  = (float) $request->paid_amount;
 
     // Currency conversion to base currency
     $conversionRate = 1.0;
@@ -265,34 +268,33 @@ public function store(Request $request)
             ->first();
 
         if (!$rate) {
-            return back()->withErrors(['currency' => 'Exchange rate not found for ' . $originalCurrency . ' to ' . $baseCurrency]);
+            return back()->withErrors([
+                'currency' => 'Exchange rate not found for ' . $originalCurrency . ' to ' . $baseCurrency
+            ])->withInput();
         }
 
         $conversionRate = (float) $rate->rate;
     }
 
-    $convertedBase   = $enteredBase  * $conversionRate;
-    $convertedTotal  = $enteredTotal * $conversionRate;
-    $convertedPaid   = $enteredPaid  * $conversionRate;
+    $convertedBase  = $enteredBase  * $conversionRate;
+    $convertedTotal = $enteredTotal * $conversionRate;
+    $convertedPaid  = $enteredPaid  * $conversionRate;
 
     // --- VAT math in base currency ---
-    // Normalize base/total/vat based on inclusivity to ensure internal consistency.
     if ($vatPercent < 0) { $vatPercent = 0; }
 
     if ($isVatInclusive) {
-        // total includes VAT; derive vat_amount and base_price from total
-        // vatAmount = total - total / (1 + v)
+        // total includes VAT; derive vat and base from total
         $v = $vatPercent / 100.0;
-        $vatAmount       = $v > 0 ? ($convertedTotal - ($convertedTotal / (1 + $v))) : 0.0;
-        $convertedBase   = $convertedTotal - $vatAmount;
-        // Keep $convertedTotal as entered (in base currency)
+        $vatAmount     = $v > 0 ? ($convertedTotal - ($convertedTotal / (1 + $v))) : 0.0;
+        $convertedBase = $convertedTotal - $vatAmount;
     } else {
-        // base excludes VAT; derive vat_amount and total
-        $vatAmount      = $convertedBase * ($vatPercent / 100.0);
+        // base excludes VAT; compute total
+        $vatAmount     = $convertedBase * ($vatPercent / 100.0);
         $convertedTotal = $convertedBase + $vatAmount;
     }
 
-    // Round to 2 decimals for money columns
+    // Round to 2 decimals
     $convertedBase  = round($convertedBase, 2);
     $vatAmount      = round($vatAmount, 2);
     $convertedTotal = round($convertedTotal, 2);
@@ -300,6 +302,7 @@ public function store(Request $request)
 
     $payment = new Payment();
 
+    // Basic refs
     $payment->system_id  = $request->filled('system_id')  ? (int)$request->system_id  : null;
     $payment->branch_id  = $request->filled('branch_id')  ? (int)$request->branch_id  : null;
     $payment->academy_id = $request->filled('academy_id') ? (int)$request->academy_id : null;
@@ -308,43 +311,49 @@ public function store(Request $request)
     if (in_array($request->category, ['program', 'uniform', 'class'])) {
         $payment->player_id  = $request->player_id;
         $payment->program_id = $request->program_id;
-        if ($request->category === 'class' && is_array($request->classes)) {
-            $payment->class_count = count($request->classes);
-        } else {
-            $payment->class_count = $request->class_count;
-        }
+        $payment->class_count = ($request->category === 'class' && is_array($request->classes))
+            ? count($request->classes)
+            : $request->class_count;
     }
 
-    // Store amounts in base currency (normalized)
-    $payment->base_price   = $convertedBase;
-    $payment->vat_percent  = $vatPercent;
-    $payment->vat_amount   = $vatAmount;
-    $payment->total_price  = $convertedTotal;
-    $payment->paid_amount  = $convertedPaid;
-    $payment->remaining_amount = $convertedTotal - $convertedPaid;
+    // Amounts (stored in base currency)
+    $payment->base_price        = $convertedBase;
+    $payment->vat_percent       = $vatPercent;
+    $payment->vat_amount        = $vatAmount;
+    $payment->total_price       = $convertedTotal;
+    $payment->paid_amount       = $convertedPaid;
+    $payment->remaining_amount  = $convertedTotal - $convertedPaid;
 
-    // Set base & original currency meta
-    $payment->currency            = $baseCurrency;        // stored currency
-    $payment->original_currency   = $originalCurrency;    // user-selected currency
-    $payment->exchange_rate_used  = $conversionRate;
+    // Currency meta
+    $payment->currency           = $baseCurrency;       // stored currency
+    $payment->original_currency  = $originalCurrency;   // user-selected
+    $payment->exchange_rate_used = $conversionRate;
 
-    // VAT inclusive flag
+    // VAT flag
     $payment->is_vat_inclusive = $isVatInclusive;
 
-    // Status / other fields
+    // Status & misc
     $payment->status            = $payment->remaining_amount == 0.0 ? 'paid' : ($payment->paid_amount > 0 ? 'partial' : 'pending');
     $payment->payment_method_id = $request->payment_method_id;
-    $payment->payment_date      = now();
     $payment->note              = $request->note;
+
+    // NEW: dates (use provided value, default payment_date to today if empty)
+    $payment->payment_date = $request->filled('payment_date')
+        ? $request->payment_date
+        : now()->toDateString();
+    $payment->start_date   = $request->filled('start_date') ? $request->start_date : null;
+    $payment->end_date     = $request->filled('end_date')   ? $request->end_date   : null;
 
     $payment->save();
 
+    // Sync classes
     if ($request->category === 'class' && is_array($request->classes)) {
         $payment->classes()->sync(
             collect($request->classes)->mapWithKeys(fn($classId) => [$classId => ['quantity' => 1]])->toArray()
         );
     }
 
+    // Items (keep your conversion per item)
     if ($request->filled('items')) {
         $items = json_decode($request->items, true);
         if (is_array($items)) {
@@ -362,14 +371,14 @@ public function store(Request $request)
                         ->first();
 
                     if ($rate) {
-                        $item['converted_price']   = round($origPrice * (float)$rate->rate, 2);
+                        $item['converted_price']    = round($origPrice * (float)$rate->rate, 2);
                         $item['exchange_rate_used'] = (float)$rate->rate;
                     } else {
-                        $item['converted_price']   = round($origPrice, 2);
+                        $item['converted_price']    = round($origPrice, 2);
                         $item['exchange_rate_used'] = 1;
                     }
                 } else {
-                    $item['converted_price']   = round($origPrice, 2);
+                    $item['converted_price']    = round($origPrice, 2);
                     $item['exchange_rate_used'] = 1;
                 }
             }
@@ -382,6 +391,7 @@ public function store(Request $request)
     return redirect()->route('admin.payments.index')
         ->with('success', __('payment.messages.payment_created_successfully'));
 }
+
 
 
 
@@ -426,6 +436,11 @@ public function update(Request $request, Payment $payment)
         'currency'          => 'required|string|max:3',
         'classes'           => 'nullable|array',
         'classes.*'         => 'integer|exists:class_models,id',
+
+        // NEW: dates
+        'payment_date'      => 'nullable|date',
+        'start_date'        => 'nullable|date',
+        'end_date'          => 'nullable|date|after_or_equal:start_date',
     ]);
 
     $baseCurrency     = config('app.base_currency', 'AED');
@@ -449,7 +464,7 @@ public function update(Request $request, Payment $payment)
         if (!$rate) {
             return back()->withErrors([
                 'currency' => 'Exchange rate not found for ' . $originalCurrency . ' to ' . $baseCurrency
-            ]);
+            ])->withInput();
         }
         $conversionRate = (float) $rate->rate;
     }
@@ -458,13 +473,13 @@ public function update(Request $request, Payment $payment)
     $convertedTotal = $enteredTotal * $conversionRate;
     $convertedPaid  = $enteredPaid  * $conversionRate;
 
-    // --- VAT normalization in base currency ---
+    // VAT normalization in base currency
     if ($vatPercent < 0) { $vatPercent = 0; }
 
     if ($isVatInclusive) {
         // total already includes VAT -> derive base & VAT from total
-        $v          = $vatPercent / 100.0;
-        $vatAmount  = $v > 0 ? ($convertedTotal - ($convertedTotal / (1 + $v))) : 0.0;
+        $v         = $vatPercent / 100.0;
+        $vatAmount = $v > 0 ? ($convertedTotal - ($convertedTotal / (1 + $v))) : 0.0;
         $convertedBase = $convertedTotal - $vatAmount;
     } else {
         // base excludes VAT -> derive VAT & total from base
@@ -519,6 +534,13 @@ public function update(Request $request, Payment $payment)
     $payment->payment_method_id = $request->payment_method_id;
     $payment->note              = $request->note;
 
+    // NEW: dates (use provided values; keep existing if omitted)
+    $payment->payment_date = $request->filled('payment_date')
+        ? $request->payment_date
+        : ($payment->payment_date ?? now()->toDateString());
+    $payment->start_date   = $request->filled('start_date') ? $request->start_date : $payment->start_date;
+    $payment->end_date     = $request->filled('end_date')   ? $request->end_date   : $payment->end_date;
+
     $payment->save();
 
     // Sync classes
@@ -572,6 +594,7 @@ public function update(Request $request, Payment $payment)
     return redirect()->route('admin.payments.index')
         ->with('success', __('payment.messages.payment_updated_successfully'));
 }
+
 
 
 
