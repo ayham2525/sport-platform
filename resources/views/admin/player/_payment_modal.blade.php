@@ -83,7 +83,7 @@
           </div>
           <div class="col">
             <label><i class="la la-tag"></i> {{ __('player.fields.discount') }}</label>
-            <input type="number" step="0.01" name="discount" class="form-control">
+            <input type="number" value="0" step="0.01" name="discount" class="form-control" requiredgit>
           </div>
           <div class="col">
             <label><i class="la la-percent"></i> {{ __('payment.fields.is_vat_inclusive') }}</label>
