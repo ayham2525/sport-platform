@@ -31,5 +31,31 @@ return [
     'export_excel' => 'Export Excel',
     'clear' => 'Clear',
 
+    'titles' => [
+        'attendance' => 'Attendance',
+        'view'       => 'View Attendance',
+        'take'       => 'Take Attendance',
+    ],
+    'action' => [
+        'view'   => 'View Attendance',
+        'take'   => 'Take Attendance',
+        'filter' => 'Filter',
+    ],
+    'fields' => [
+        'user'       => 'User',
+        'role'       => 'Role',
+        'player'     => 'Player',
+        'branch'     => 'Branch',
+        'scanned_at' => 'Scanned At',
+        'date_from'  => 'Date From',
+        'date_to'    => 'Date To',
+        'serial'     => 'Card Serial',
+    ],
+    'messages' => [
+        'saved'     => 'Attendance saved.',
+        'not_found' => 'No user found for this card.',
+    ],
+
+
 
 ];

@@ -59,335 +59,369 @@
         <ul class="menu-subnav">
             <li class="menu-item" aria-haspopup="true">
                 <a href="{{ route('admin.evaluations.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot">
-                        <span></span>
-                    </i>
-                    <span class="menu-text">Evaluations</span>
+                <i class="menu-bullet menu-bullet-dot">
+                    <span></span>
+                </i>
+                <span class="menu-text">Evaluations</span>
                 </a>
-            </li>
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.coach_evaluation.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot">
-                        <span></span>
-                    </i>
-                    <span class="menu-text">Coach Evaluations</span>
-                </a>
-            </li>
-        </ul>
-    </div>
-</li> --}}
-
-
-{{-- ✅ Branches Menu --}}
-@if (PermissionHelper::hasPermission('view', App\Models\Branch::MODEL_NAME))
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Branches Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24"/>
-                    <path d="M4,3 L20,3 C21.1045695,3 22,3.8954305 22,5 L22,19 C22,20.1045695 21.1045695,21 20,21 L4,21 C2.8954305,21 2,20.1045695 2,19 L2,5 C2,3.8954305 2.8954305,3 4,3 Z" fill="#000000"/>
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('branch.titles.branches') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="menu-submenu">
-        <i class="menu-arrow"></i>
-        <ul class="menu-subnav">
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.branches.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('branch.action.list') }}</span>
-                </a>
-            </li>
-
-            @if (PermissionHelper::hasPermission('create', App\Models\Branch::MODEL_NAME))
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.branches.create') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('branch.action.add') }}</span>
-                </a>
-            </li>
-            @endif
-        </ul>
-    </div>
-</li>
-@endif
-
-{{-- ✅ Academies Menu --}}
-@if (PermissionHelper::hasPermission('view', App\Models\Academy::MODEL_NAME))
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Academies Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24"/>
-                    <path d="M3,13 L21,13 C21.5522847,13 22,13.4477153 22,14 L22,20 C22,20.5522847 21.5522847,21 21,21 L3,21 C2.44771525,21 2,20.5522847 2,20 L2,14 C2,13.4477153 2.44771525,13 3,13 Z M6,3 L18,3 C18.5522847,3 19,3.44771525 19,4 L19,10 C19,10.5522847 18.5522847,11 18,11 L6,11 C5.44771525,11 5,10.5522847 5,10 L5,4 C5,3.44771525 5.44771525,3 6,3 Z" fill="#000000"/>
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('academy.titles.academies') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="menu-submenu">
-        <i class="menu-arrow"></i>
-        <ul class="menu-subnav">
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.academies.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('academy.action.list') }}</span>
-                </a>
-            </li>
-
-            @if (PermissionHelper::hasPermission('create', App\Models\Academy::MODEL_NAME))
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.academies.create') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('academy.action.add') }}</span>
-                </a>
-            </li>
-            @endif
-        </ul>
-    </div>
-</li>
-@endif
-
-
-
- @if (PermissionHelper::hasPermission('view', App\Models\Player::MODEL_NAME))
-
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Players Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24" />
-                    <path d="M12,12 C14.7614237,12 17,9.76142375 17,7 C17,4.23857625 14.7614237,2 12,2 C9.23857625,2 7,4.23857625 7,7 C7,9.76142375 9.23857625,12 12,12 Z" fill="#000000" fill-rule="nonzero" />
-                    <path d="M3.00065155,20.1992459 C3.38825852,15.4268208 7.26191235,13 12,13 C16.7380876,13 20.6117415,15.4268208 21.0003485,20.1992459 C21.0268352,20.5201676 20.776217,20.8 20.4544271,20.8 L3.54557286,20.8 C3.22378302,20.8 2.97316482,20.5201676 3.00065155,20.1992459 Z" fill="#000000" opacity="0.3" />
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('player.titles.players') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="menu-submenu">
-        <i class="menu-arrow"></i>
-        <ul class="menu-subnav">
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.players.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot">
-                        <span></span>
-                    </i>
-                    <span class="menu-text">{{ __('player.titles.players_list') }}</span>
-                </a>
-            </li>
-             @if (PermissionHelper::hasPermission('create', App\Models\Player::MODEL_NAME))
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.players.create') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot">
-                        <span></span>
-                    </i>
-                    <span class="menu-text">{{ __('player.titles.add_new_player') }}</span>
-                </a>
-            </li>
-            @endif
-        </ul>
-    </div>
-</li>
-@endif
-
-@if (PermissionHelper::hasPermission('view', App\Models\Program::MODEL_NAME))
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Programs Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24" />
-                    <path d="M5,4 L19,4 C20.1045695,4 21,4.8954305 21,6 L21,18 C21,19.1045695 20.1045695,20 19,20 L5,20 C3.8954305,20 3,19.1045695 3,18 L3,6 C3,4.8954305 3.8954305,4 5,4 Z M5,6 L5,18 L19,18 L19,6 L5,6 Z" fill="#000000" />
-                    <rect fill="#000000" opacity="0.3" x="7" y="8" width="10" height="2" rx="1" />
-                    <rect fill="#000000" opacity="0.3" x="7" y="12" width="7" height="2" rx="1" />
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('program.titles.programs') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="menu-submenu">
-        <i class="menu-arrow"></i>
-        <ul class="menu-subnav">
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.programs.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('program.actions.list') }}</span>
-                </a>
-            </li>
-            @if (PermissionHelper::hasPermission('create', App\Models\Program::MODEL_NAME))
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.programs.create') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('program.actions.add') }}</span>
-                </a>
-            </li>
-            @endif
-        </ul>
-    </div>
-</li>
-@endif
-
- @if (PermissionHelper::hasPermission('view', App\Models\Payment::MODEL_NAME))
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Payments Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24" />
-                    <path d="M4,5 L20,5 C21.1045695,5 22,5.8954305 22,7 L22,17 C22,18.1045695 21.1045695,19 20,19 L4,19 C2.8954305,19 2,18.1045695 2,17 L2,7 C2,5.8954305 2.8954305,5 4,5 Z M4,7 L4,17 L20,17 L20,7 L4,7 Z" fill="#000000" />
-                    <rect fill="#000000" opacity="0.3" x="6" y="10" width="12" height="2" rx="1" />
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('payment.titles.payments') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="menu-submenu">
-        <i class="menu-arrow"></i>
-        <ul class="menu-subnav">
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.payments.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('payment.actions.list') }}</span>
-                </a>
-            </li>
-
-        @if (PermissionHelper::hasPermission('create', App\Models\Player::MODEL_NAME))
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.payments.create') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('payment.actions.add') }}</span>
-                </a>
-            </li>
-            @endif
-        </ul>
-    </div>
-</li>
-@endif
- @if (PermissionHelper::hasPermission('view', App\Models\UniformRequest::MODEL_NAME))
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Uniform Icon (same as payment, or replace with custom if needed) -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect x="0" y="0" width="24" height="24" />
-                    <path d="M4,5 L20,5 C21.1045695,5 22,5.8954305 22,7 L22,17 C22,18.1045695 21.1045695,19 20,19 L4,19 C2.8954305,19 2,18.1045695 2,17 L2,7 C2,5.8954305 2.8954305,5 4,5 Z M4,7 L4,17 L20,17 L20,7 L4,7 Z" fill="#000000" />
-                    <rect fill="#000000" opacity="0.3" x="6" y="10" width="12" height="2" rx="1" />
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('uniform_requests.titles.uniform_requests') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="menu-submenu">
-        <i class="menu-arrow"></i>
-        <ul class="menu-subnav">
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.uniform-requests.index') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('uniform_requests.actions.list') }}</span>
-                </a>
-            </li>
-             @if (PermissionHelper::hasPermission('create', App\Models\UniformRequest::MODEL_NAME))
-            <li class="menu-item" aria-haspopup="true">
-                <a href="{{ route('admin.uniform-requests.create') }}" class="menu-link">
-                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                    <span class="menu-text">{{ __('uniform_requests.actions.add') }}</span>
-                </a>
-            </li>
-            @endif
-        </ul>
-    </div>
-</li>
-@endif
-
-@php
-    $user = auth()->user();
-@endphp
-
-{{-- Attendance (top-level, outside Reports) --}}
-<li class="menu-item {{ request()->routeIs('admin.attendance.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
-    <a href="{{ route('admin.attendance.index') }}" class="menu-link">
-        <span class="menu-icon"><i class="la la-calendar-check"></i></span>
-        <span class="menu-text">{{ __('attendance.title') }}</span>
-    </a>
-</li>
-
-@if (in_array($user->role, ['full_admin', 'system_admin']))
-<li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
-    <a href="javascript:;" class="menu-link menu-toggle">
-        <span class="svg-icon menu-icon">
-            <!-- Reports Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                <g fill="none" fill-rule="evenodd">
-                    <rect width="24" height="24"/>
-                    <path d="M5,3 L19,3 C20.1045695,3 21,3.8954305 21,5 L21,19 C21,20.1045695 20.1045695,21 19,21 L5,21 C3.8954305,21 3,20.1045695 3,19 L3,5 C3,3.8954305 3.8954305,3 5,3 Z M5,5 L5,19 L19,19 L19,5 L5,5 Z" fill="#000000"/>
-                    <rect fill="#000000" opacity="0.3" x="7" y="7" width="2" height="9" rx="1"/>
-                    <rect fill="#000000" opacity="0.3" x="11" y="10" width="2" height="6" rx="1"/>
-                    <rect fill="#000000" opacity="0.3" x="15" y="13" width="2" height="3" rx="1"/>
-                </g>
-            </svg>
-        </span>
-        <span class="menu-text">{{ __('reports.title') }}</span>
-        <i class="menu-arrow"></i>
-    </a>
-   <div class="menu-submenu">
-    <i class="menu-arrow"></i>
-    <ul class="menu-subnav">
-        {{-- Attendance --}}
-
-
-        {{-- Payments --}}
-        <li class="menu-item {{ request()->routeIs('admin.reports.payments.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
-            <a href="{{ route('admin.reports.payments.index') }}" class="menu-link">
-                <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                <span class="menu-text">{{ __('reports.payments_report') }}</span>
-            </a>
-        </li>
-
-        {{-- Uniforms --}}
-        <li class="menu-item {{ request()->routeIs('admin.reports.uniforms.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
-            <a href="{{ route('admin.reports.uniforms.index') }}" class="menu-link">
-                <i class="menu-bullet menu-bullet-dot"><span></span></i>
-                <span class="menu-text">{{ __('reports.uniforms_report') }}</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ request()->routeIs('admin.reports.payments.branch_summary') ? 'menu-item-active' : '' }}" aria-haspopup="true">
-    <a href="{{ route('admin.reports.payments.branch_summary') }}" class="menu-link">
-        <i class="menu-bullet menu-bullet-dot"><span></span></i>
-        <span class="menu-text">{{ __('reports.branch_payments_summary') }}</span>
-    </a>
-</li>
-
-        {{-- More report links can be added here later --}}
-    </ul>
-</div>
-
-</li>
-@endif
-
-
-
-
-
-
+                </li>
+                <li class="menu-item" aria-haspopup="true">
+                    <a href="{{ route('admin.coach_evaluation.index') }}" class="menu-link">
+                        <i class="menu-bullet menu-bullet-dot">
+                            <span></span>
+                        </i>
+                        <span class="menu-text">Coach Evaluations</span>
+                    </a>
+                </li>
             </ul>
         </div>
+        </li> --}}
+
+
+        {{-- ✅ Branches Menu --}}
+        @if (PermissionHelper::hasPermission('view', App\Models\Branch::MODEL_NAME))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Branches Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24" />
+                            <path d="M4,3 L20,3 C21.1045695,3 22,3.8954305 22,5 L22,19 C22,20.1045695 21.1045695,21 20,21 L4,21 C2.8954305,21 2,20.1045695 2,19 L2,5 C2,3.8954305 2.8954305,3 4,3 Z" fill="#000000" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('branch.titles.branches') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.branches.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('branch.action.list') }}</span>
+                        </a>
+                    </li>
+
+                    @if (PermissionHelper::hasPermission('create', App\Models\Branch::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.branches.create') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('branch.action.add') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+
+        {{-- ✅ Academies Menu --}}
+        @if (PermissionHelper::hasPermission('view', App\Models\Academy::MODEL_NAME))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Academies Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24" />
+                            <path d="M3,13 L21,13 C21.5522847,13 22,13.4477153 22,14 L22,20 C22,20.5522847 21.5522847,21 21,21 L3,21 C2.44771525,21 2,20.5522847 2,20 L2,14 C2,13.4477153 2.44771525,13 3,13 Z M6,3 L18,3 C18.5522847,3 19,3.44771525 19,4 L19,10 C19,10.5522847 18.5522847,11 18,11 L6,11 C5.44771525,11 5,10.5522847 5,10 L5,4 C5,3.44771525 5.44771525,3 6,3 Z" fill="#000000" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('academy.titles.academies') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.academies.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('academy.action.list') }}</span>
+                        </a>
+                    </li>
+
+                    @if (PermissionHelper::hasPermission('create', App\Models\Academy::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.academies.create') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('academy.action.add') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+
+
+
+        @if (PermissionHelper::hasPermission('view', App\Models\Player::MODEL_NAME))
+
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Players Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24" />
+                            <path d="M12,12 C14.7614237,12 17,9.76142375 17,7 C17,4.23857625 14.7614237,2 12,2 C9.23857625,2 7,4.23857625 7,7 C7,9.76142375 9.23857625,12 12,12 Z" fill="#000000" fill-rule="nonzero" />
+                            <path d="M3.00065155,20.1992459 C3.38825852,15.4268208 7.26191235,13 12,13 C16.7380876,13 20.6117415,15.4268208 21.0003485,20.1992459 C21.0268352,20.5201676 20.776217,20.8 20.4544271,20.8 L3.54557286,20.8 C3.22378302,20.8 2.97316482,20.5201676 3.00065155,20.1992459 Z" fill="#000000" opacity="0.3" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('player.titles.players') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.players.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot">
+                                <span></span>
+                            </i>
+                            <span class="menu-text">{{ __('player.titles.players_list') }}</span>
+                        </a>
+                    </li>
+                    @if (PermissionHelper::hasPermission('create', App\Models\Player::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.players.create') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot">
+                                <span></span>
+                            </i>
+                            <span class="menu-text">{{ __('player.titles.add_new_player') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+
+        @if (PermissionHelper::hasPermission('view', App\Models\Program::MODEL_NAME))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Programs Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24" />
+                            <path d="M5,4 L19,4 C20.1045695,4 21,4.8954305 21,6 L21,18 C21,19.1045695 20.1045695,20 19,20 L5,20 C3.8954305,20 3,19.1045695 3,18 L3,6 C3,4.8954305 3.8954305,4 5,4 Z M5,6 L5,18 L19,18 L19,6 L5,6 Z" fill="#000000" />
+                            <rect fill="#000000" opacity="0.3" x="7" y="8" width="10" height="2" rx="1" />
+                            <rect fill="#000000" opacity="0.3" x="7" y="12" width="7" height="2" rx="1" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('program.titles.programs') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.programs.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('program.actions.list') }}</span>
+                        </a>
+                    </li>
+                    @if (PermissionHelper::hasPermission('create', App\Models\Program::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.programs.create') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('program.actions.add') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+
+        @if (PermissionHelper::hasPermission('view', App\Models\Payment::MODEL_NAME))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Payments Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24" />
+                            <path d="M4,5 L20,5 C21.1045695,5 22,5.8954305 22,7 L22,17 C22,18.1045695 21.1045695,19 20,19 L4,19 C2.8954305,19 2,18.1045695 2,17 L2,7 C2,5.8954305 2.8954305,5 4,5 Z M4,7 L4,17 L20,17 L20,7 L4,7 Z" fill="#000000" />
+                            <rect fill="#000000" opacity="0.3" x="6" y="10" width="12" height="2" rx="1" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('payment.titles.payments') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.payments.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('payment.actions.list') }}</span>
+                        </a>
+                    </li>
+
+                    @if (PermissionHelper::hasPermission('create', App\Models\Player::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.payments.create') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('payment.actions.add') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+        @if (PermissionHelper::hasPermission('view', App\Models\UniformRequest::MODEL_NAME))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Uniform Icon (same as payment, or replace with custom if needed) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24" />
+                            <path d="M4,5 L20,5 C21.1045695,5 22,5.8954305 22,7 L22,17 C22,18.1045695 21.1045695,19 20,19 L4,19 C2.8954305,19 2,18.1045695 2,17 L2,7 C2,5.8954305 2.8954305,5 4,5 Z M4,7 L4,17 L20,17 L20,7 L4,7 Z" fill="#000000" />
+                            <rect fill="#000000" opacity="0.3" x="6" y="10" width="12" height="2" rx="1" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('uniform_requests.titles.uniform_requests') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.uniform-requests.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('uniform_requests.actions.list') }}</span>
+                        </a>
+                    </li>
+                    @if (PermissionHelper::hasPermission('create', App\Models\UniformRequest::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.uniform-requests.create') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('uniform_requests.actions.add') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+
+        @php
+        $user = auth()->user();
+        @endphp
+
+        {{-- Attendance (top-level, outside Reports) --}}
+        @if (PermissionHelper::hasPermission('view', App\Models\Attendance::MODEL_NAME))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Attendance Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <g fill="none" fill-rule="evenodd">
+                            <rect width="24" height="24" />
+                            <path d="M3 4h18v2H3zM3 9h18v11H3z" fill="#000" opacity=".3" />
+                            <rect fill="#000" x="6" y="12" width="12" height="2" rx="1" />
+                            <rect fill="#000" x="6" y="16" width="8" height="2" rx="1" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('attendance.titles.attendance') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.attendance.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('attendance.action.view') }}</span>
+                        </a>
+                    </li>
+                    @if (PermissionHelper::hasPermission('create', App\Models\Attendance::MODEL_NAME))
+                    <li class="menu-item" aria-haspopup="true">
+                        <a href="{{ route('admin.attendance.scan') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('attendance.action.take') }}</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
+        </li>
+        @endif
+
+
+        @if (in_array($user->role, ['full_admin', 'system_admin']))
+        <li class="menu-item menu-item-submenu" aria-haspopup="true" data-menu-toggle="hover">
+            <a href="javascript:;" class="menu-link menu-toggle">
+                <span class="svg-icon menu-icon">
+                    <!-- Reports Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                        <g fill="none" fill-rule="evenodd">
+                            <rect width="24" height="24" />
+                            <path d="M5,3 L19,3 C20.1045695,3 21,3.8954305 21,5 L21,19 C21,20.1045695 20.1045695,21 19,21 L5,21 C3.8954305,21 3,20.1045695 3,19 L3,5 C3,3.8954305 3.8954305,3 5,3 Z M5,5 L5,19 L19,19 L19,5 L5,5 Z" fill="#000000" />
+                            <rect fill="#000000" opacity="0.3" x="7" y="7" width="2" height="9" rx="1" />
+                            <rect fill="#000000" opacity="0.3" x="11" y="10" width="2" height="6" rx="1" />
+                            <rect fill="#000000" opacity="0.3" x="15" y="13" width="2" height="3" rx="1" />
+                        </g>
+                    </svg>
+                </span>
+                <span class="menu-text">{{ __('reports.title') }}</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="menu-submenu">
+                <i class="menu-arrow"></i>
+                <ul class="menu-subnav">
+                    {{-- Attendance --}}
+
+
+                    {{-- Payments --}}
+                    <li class="menu-item {{ request()->routeIs('admin.reports.payments.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+                        <a href="{{ route('admin.reports.payments.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('reports.payments_report') }}</span>
+                        </a>
+                    </li>
+
+                    {{-- Uniforms --}}
+                    <li class="menu-item {{ request()->routeIs('admin.reports.uniforms.*') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+                        <a href="{{ route('admin.reports.uniforms.index') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('reports.uniforms_report') }}</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-item {{ request()->routeIs('admin.reports.payments.branch_summary') ? 'menu-item-active' : '' }}" aria-haspopup="true">
+                        <a href="{{ route('admin.reports.payments.branch_summary') }}" class="menu-link">
+                            <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                            <span class="menu-text">{{ __('reports.branch_payments_summary') }}</span>
+                        </a>
+                    </li>
+
+                    {{-- More report links can be added here later --}}
+                </ul>
+            </div>
+
+        </li>
+        @endif
+
+
+
+
+
+
+        </ul>
     </div>
 </div>
+</div>
+

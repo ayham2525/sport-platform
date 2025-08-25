@@ -123,6 +123,10 @@ Route::middleware(['web'])->group(function () {
             Route::resource('sports', SportController::class);
 
             // 🔹 Attendance Management
+            // Attendance (AJAX + scan)
+            Route::get('attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
+            Route::post('attendance/scan', [AttendanceController::class, 'scanStore'])->name('attendance.scan.store');
+            Route::post('attendance/search', [AttendanceController::class, 'search'])->name('attendance.search');
             Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
             Route::resource('attendance', AttendanceController::class);
 
