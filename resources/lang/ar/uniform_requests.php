@@ -84,6 +84,7 @@ return [
         'ordered_at'     => 'تاريخ الطلب من المورد',
         'delivered_at'   => 'تاريخ التسليم',
         'request_date'   => 'تاريخ الطلب',
+           'stock_status' => 'حالة المخزون',
     ],
 
     // الإجراءات
@@ -140,5 +141,13 @@ return [
 
     'messages' => [
         'no_requests' => 'لا توجد طلبات زي.',
+    ],
+
+    'select_stock_status' => 'اختر حالة المخزون',
+    'stock_statuses' => [
+        'in_stock'     => 'متوفر',
+        'out_of_stock' => 'غير متوفر',
+        'reserved'     => 'محجوز',
+        'pending'      => 'قيد الانتظار',
     ],
 ];

@@ -181,18 +181,29 @@
                 </div>
 @if (in_array($user->role, ['full_admin', 'system_admin']))
 {{-- Office Status --}}
-<div class="form-group col-md-4">
-    <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
-    <select name="office_status" id="office_status" class="form-control">
-        <option value="">{{ __('uniform_requests.select_office_status') }}</option>
-        @foreach (\App\Models\UniformRequest::OFFICE_STATUS_OPTIONS as $key => $label)
-            <option value="{{ $key }}" {{ old('office_status', $uniformRequest->office_status) === $key ? 'selected' : '' }}>
-                {{ __('uniform_requests.office_statuses.' . $key) }}
+    <div class="form-group col-md-4">
+        <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
+        <select name="office_status" id="office_status" class="form-control">
+            <option value="">{{ __('uniform_requests.select_office_status') }}</option>
+            @foreach (\App\Models\UniformRequest::OFFICE_STATUS_OPTIONS as $key => $label)
+                <option value="{{ $key }}" {{ old('office_status', $uniformRequest->office_status) === $key ? 'selected' : '' }}>
+                    {{ __('uniform_requests.office_statuses.' . $key) }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    <div class="form-group col-md-4">
+    <label><i class="la la-warehouse text-muted mr-1"></i> {{ __('uniform_requests.fields.stock_status') }}</label>
+    <select name="stock_status" class="form-control">
+        @foreach($stockStatusOptions as $key => $label)
+            <option value="{{ $key }}"
+                {{ old('stock_status', $uniformRequest->stock_status ?? 'pending') === $key ? 'selected' : '' }}>
+                {{ __('uniform_requests.stock_statuses.' . $key) }}
             </option>
         @endforeach
     </select>
 </div>
-@endif
+    @endif
         {{-- Payment Method --}}
 {{-- Payment Method (varchar) --}}
 <div class="form-group col-md-4">

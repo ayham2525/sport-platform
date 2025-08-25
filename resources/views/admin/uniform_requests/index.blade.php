@@ -90,7 +90,7 @@
                 </select>
             </div>
 
-            {{-- NEW: Office Status --}}
+            {{-- Office Status --}}
             <div class="col-md-3 mt-3">
                 <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
                 <select name="office_status" class="form-control" onchange="this.form.submit()">
@@ -99,6 +99,18 @@
                     <option value="{{ $oStatus }}" {{ request('office_status') == $oStatus ? 'selected' : '' }}>
                         {{ __('uniform_requests.office_statuses.' . $oStatus) }}
                     </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-3 mt-3">
+                <label><i class="la la-warehouse text-muted mr-1"></i> {{ __('uniform_requests.fields.stock_status') }}</label>
+                <select name="stock_status" class="form-control" onchange="this.form.submit()">
+                    <option value="">{{ __('uniform_requests.select_stock_status') }}</option>
+                    @foreach(\App\Models\UniformRequest::STOCK_STATUS_OPTIONS as $sStatus => $label)
+                        <option value="{{ $sStatus }}" {{ request('stock_status') == $sStatus ? 'selected' : '' }}>
+                            {{ __('uniform_requests.stock_statuses.' . $sStatus) }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -135,6 +147,23 @@
         </div>
         @endforeach
     </div>
+
+    <div class="row mb-4">
+    @foreach(\App\Models\UniformRequest::STOCK_STATUS_OPTIONS as $sKey => $sLabel)
+        <div class="col-md-3">
+            <div class="card text-center border">
+                <div class="card-body p-3">
+                    <h6 class="text-muted mb-2">
+                        <i class="la la-warehouse"></i> {{ __('uniform_requests.stock_statuses.' . $sKey) }}
+                    </h6>
+                    <h4 class="font-weight-bold">
+                        {{ $stockCounts[$sKey] ?? 0 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
 
     <div class="card">
         <div class="card-header">
@@ -183,6 +212,8 @@
                             {{-- NEW headers --}}
                             <th><i class="la la-sitemap text-muted mr-1"></i> {{ __('uniform_requests.fields.branch_status') }}</th>
                             <th><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</th>
+                            <th><i class="la la-warehouse text-muted mr-1"></i> {{ __('uniform_requests.fields.stock_status') }}</th>
+
                             <th><i class="la la-credit-card text-muted mr-1"></i> {{ __('uniform_requests.fields.payment_method') }}</th>
 
                             <th><i class="la la-sticky-note text-muted mr-1"></i> {{ __('uniform_requests.fields.admin_remarks') }}</th>
@@ -224,6 +255,20 @@
                             </td>
                             <td>
                                 {{ $req->office_status ? __('uniform_requests.office_statuses.' . $req->office_status) : '—' }}
+                            </td>
+                            <td>
+                                @php
+                                    $stock = $req->stock_status ?? 'pending';
+                                    $badgeClass = match($stock) {
+                                        'in_stock'     => 'success',
+                                        'reserved'     => 'warning',
+                                        'out_of_stock' => 'danger',
+                                        default        => 'secondary',
+                                    };
+                                @endphp
+                                <span class="badge badge-{{ $badgeClass }}">
+                                    {{ __('uniform_requests.stock_statuses.' . $stock) }}
+                                </span>
                             </td>
                             <td>{{ $req->payment_method ?? '—' }}</td>
 

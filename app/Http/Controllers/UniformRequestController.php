@@ -20,7 +20,7 @@ class UniformRequestController extends Controller
     /**
      * Display a listing of the resource.
      */
-   public function index(Request $request)
+public function index(Request $request)
 {
     if (!PermissionHelper::hasPermission('view', UniformRequest::MODEL_NAME)) {
         return PermissionHelper::denyAccessResponse();
@@ -37,18 +37,26 @@ class UniformRequestController extends Controller
             $systems = System::pluck('name', 'id');
             if ($request->filled('system_id')) {
                 $query->where('system_id', $request->system_id);
+
                 $branches = Branch::where('system_id', $request->system_id)->pluck('name', 'id');
-                $players  = Player::whereHas('branch', fn($q) => $q->where('system_id', $request->system_id))
-                                  ->with('user:id,name')->get();
+
+                $players  = Player::whereHas('branch', function ($q) use ($request) {
+                                $q->where('system_id', $request->system_id);
+                            })
+                            ->with('user:id,name')
+                            ->get();
+
                 $items    = Item::where('system_id', $request->system_id)
                                 ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id');
             }
             break;
+
         case 'system_admin':
-             $branches = Branch::where('system_id', $user->system_id)->pluck('name', 'id');
-              // $players  = Player::where('system_id', $user->system_id)->with('user:id,name')->get();
-                $items    = Item::where('system_id', $user->system_id)
-                                ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id');
+            $branches = Branch::where('system_id', $user->system_id)->pluck('name', 'id');
+            $items    = Item::where('system_id', $user->system_id)
+                            ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id');
+            break; // <-- prevent fall-through
+
         case 'branch_admin':
         case 'academy_admin':
         case 'coach':
@@ -63,35 +71,43 @@ class UniformRequestController extends Controller
             break;
     }
 
-    // Existing filters
-    if ($request->filled('branch_id')) {
+     if ($request->filled('branch_id')) {
         $query->where('branch_id', $request->branch_id);
     }
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
 
-    // NEW filters
-    if ($request->filled('branch_status')) {
+     if ($request->filled('branch_status')) {
         $query->where('branch_status', $request->branch_status);
     }
     if ($request->filled('office_status')) {
         $query->where('office_status', $request->office_status);
     }
     if ($request->filled('payment_method')) {
-        // partial match so users can type "cash", "card", etc.
         $query->where('payment_method', 'like', '%' . trim($request->payment_method) . '%');
     }
+     if ($request->filled('stock_status')) {
+        $query->where('stock_status', $request->stock_status);
+    }
 
-    // Status cards: same filters as above, but grouped by status
+    // Status cards (main statuses) using same filters
     $statusCounts = (clone $query)
         ->select('status', DB::raw('COUNT(*) as count'))
         ->groupBy('status')
         ->pluck('count', 'status')
         ->toArray();
 
+    // OPTIONAL: stock status cards (only if you render them in the Blade)
+    $stockCounts = (clone $query)
+        ->select('stock_status', DB::raw('COUNT(*) as count'))
+        ->groupBy('stock_status')
+        ->pluck('count', 'stock_status')
+        ->toArray();
+
     $uniformRequests = $query->latest()->paginate(10);
-     return view('admin.uniform_requests.index', compact(
+
+    return view('admin.uniform_requests.index', compact(
         'uniformRequests',
         'systems',
         'branches',
@@ -99,9 +115,11 @@ class UniformRequestController extends Controller
         'items',
         'currencies',
         'request',
-        'statusCounts'
+        'statusCounts',
+        'stockCounts'
     ));
 }
+
 
 
 
@@ -129,8 +147,8 @@ public function create()
                 $systems  = System::where('id', $user->system_id)->pluck('name', 'id');
                 $branches = Branch::where('system_id', $user->system_id)->pluck('name', 'id');
                 $players  = Player::whereHas('branch', function ($q) use ($user) {
-                                $q->where('system_id', $user->system_id);
-                            })->with('user:id,name')->get();
+                                    $q->where('system_id', $user->system_id);
+                                })->with('user:id,name')->get();
                 $items    = Item::where('system_id', $user->system_id)
                                 ->pluck(app()->getLocale() === 'ar' ? 'name_ar' : 'name_en', 'id');
             }
@@ -150,11 +168,14 @@ public function create()
             break;
     }
 
-    // Global payment methods (no 'code' column referenced)
+    // Global payment methods
     $paymentMethods = PaymentMethod::query()
-        ->select('id','name') // keep it simple; use name as display/value
+        ->select('id', 'name')
         ->orderByRaw('COALESCE(name, id)')
         ->get();
+
+     $stockStatusOptions = UniformRequest::STOCK_STATUS_OPTIONS;
+    $defaultStockStatus = 'pending'; // fallback if nothing passed
 
     return view('admin.uniform_requests.create', compact(
         'systems',
@@ -162,9 +183,12 @@ public function create()
         'players',
         'items',
         'currencies',
-        'paymentMethods'
+        'paymentMethods',
+        'stockStatusOptions',
+        'defaultStockStatus'
     ));
 }
+
 
 
 
@@ -191,6 +215,7 @@ public function store(Request $request)
         'status'         => ['nullable', Rule::in(array_keys(UniformRequest::STATUS_OPTIONS))],
         'branch_status'  => ['nullable', Rule::in(array_keys(UniformRequest::BRANCH_STATUS_OPTIONS))],
         'office_status'  => ['nullable', Rule::in(array_keys(UniformRequest::OFFICE_STATUS_OPTIONS))],
+        'stock_status'   => ['nullable', Rule::in(array_keys(UniformRequest::STOCK_STATUS_OPTIONS))],
         'payment_method' => 'nullable|string|max:256',
     ]);
 
@@ -198,6 +223,7 @@ public function store(Request $request)
     $validated['status']        = $validated['status']        ?? 'requested';
     $validated['branch_status'] = $validated['branch_status'] ?? 'requested';
     $validated['office_status'] = $validated['office_status'] ?? 'pending';
+    $validated['stock_status']  = $validated['stock_status']  ?? 'pending';
 
     $validated['requested_at']  = now();
     $validated['request_date']  = now();
@@ -208,20 +234,16 @@ public function store(Request $request)
 
     UniformRequest::create($validated);
 
-
-
     return redirect()
         ->route('admin.players.show', $player->id)
         ->with('success', __('uniform_requests.created_successfully'));
-
-
-
 }
 
 
 
 
-   public function edit($id)
+
+public function edit($id)
 {
     if (!PermissionHelper::hasPermission('update', UniformRequest::MODEL_NAME)) {
         return PermissionHelper::denyAccessResponse();
@@ -273,9 +295,11 @@ public function store(Request $request)
             break;
     }
 
-    // If payment methods are global:
-    $paymentMethods = PaymentMethod::orderByRaw('COALESCE(name, id)')->get(['id','name',]);
+    // Global payment methods
+    $paymentMethods = PaymentMethod::orderByRaw('COALESCE(name, id)')
+        ->get(['id','name']);
 
+     $stockStatusOptions = UniformRequest::STOCK_STATUS_OPTIONS;
 
     return view('admin.uniform_requests.edit', compact(
         'uniformRequest',
@@ -284,52 +308,70 @@ public function store(Request $request)
         'players',
         'items',
         'currencies',
-        'paymentMethods'
+        'paymentMethods',
+        'stockStatusOptions'
     ));
 }
 
 
 
-    public function update(Request $request, $id)
-    {
-        if (!PermissionHelper::hasPermission('update', UniformRequest::MODEL_NAME)) {
-            return PermissionHelper::denyAccessResponse();
-        }
-        $uniformRequest = UniformRequest::findOrFail($id);
-        $user = Auth::user();
-
-     $validated = $request->validate([
-    'system_id'      => 'nullable|exists:systems,id',
-    'branch_id'      => 'required|exists:branches,id',
-    'player_id'      => 'required|exists:players,id',
-    'item_id'        => 'required|exists:items,id',
-    'size'           => 'required|string|max:50',
-    'color'          => 'required|string|max:50',
-    'quantity'       => 'required|integer|min:1',
-    'amount'         => 'required|numeric|min:0',
-    'currency_id'    => 'required|exists:currencies,id',
-    'notes'          => 'nullable|string',
-
-    // Use model constants (so pending/processing/etc are valid):
-    'status'         => ['required', Rule::in(array_keys(UniformRequest::STATUS_OPTIONS))],
-    'branch_status'  => ['nullable', Rule::in(array_keys(UniformRequest::BRANCH_STATUS_OPTIONS))],
-    'office_status'  => ['nullable', Rule::in(array_keys(UniformRequest::OFFICE_STATUS_OPTIONS))],
-
-    // If you're storing text for payment method:
-    'payment_method' => 'nullable|string|max:256',
-]);
-        if (in_array($user->role, ['full_admin', 'system_admin'])) {
-            $validated['admin_remarks'] = $request->input('admin_remarks');
-            $validated['approved_at'] = $request->input('approved_at');
-            $validated['ordered_at'] = $request->input('ordered_at');
-            $validated['delivered_at'] = $request->input('delivered_at');
-        }
-
-        $uniformRequest->update($validated);
-
-        return redirect()->route('admin.uniform-requests.index')
-            ->with('success', __('uniform_requests.updated_successfully'));
+  public function update(Request $request, $id)
+{
+    if (!PermissionHelper::hasPermission('update', UniformRequest::MODEL_NAME)) {
+        return PermissionHelper::denyAccessResponse();
     }
+
+    $uniformRequest = UniformRequest::findOrFail($id);
+    $user = Auth::user();
+
+    $validated = $request->validate([
+        'system_id'      => 'nullable|exists:systems,id',
+        'branch_id'      => 'required|exists:branches,id',
+        'player_id'      => 'required|exists:players,id',
+        'item_id'        => 'required|exists:items,id',
+        'size'           => 'required|string|max:50',
+        'color'          => 'required|string|max:50',
+        'quantity'       => 'required|integer|min:1',
+        'amount'         => 'required|numeric|min:0',
+        'currency_id'    => 'required|exists:currencies,id',
+        'notes'          => 'nullable|string',
+
+        // existing enums
+        'status'         => ['required', Rule::in(array_keys(UniformRequest::STATUS_OPTIONS))],
+        'branch_status'  => ['nullable', Rule::in(array_keys(UniformRequest::BRANCH_STATUS_OPTIONS))],
+        'office_status'  => ['nullable', Rule::in(array_keys(UniformRequest::OFFICE_STATUS_OPTIONS))],
+
+        // NEW: stock status enum
+        'stock_status'   => ['nullable', Rule::in(array_keys(UniformRequest::STOCK_STATUS_OPTIONS))],
+
+        // payment method
+        'payment_method' => 'nullable|string|max:256',
+
+        // optional admin dates/remarks (validate format if you want)
+        'approved_at'    => 'nullable|date',
+        'ordered_at'     => 'nullable|date',
+        'delivered_at'   => 'nullable|date',
+        'admin_remarks'  => 'nullable|string',
+    ]);
+
+    // If no stock_status passed, keep existing or fallback to 'pending'
+    $validated['stock_status'] = $validated['stock_status']
+        ?? ($uniformRequest->stock_status ?? 'pending');
+
+    // Only full/system admins can change admin fields or stock_status explicitly
+    if (!in_array($user->role, ['full_admin', 'system_admin'])) {
+        unset($validated['admin_remarks'], $validated['approved_at'], $validated['ordered_at'], $validated['delivered_at']);
+        // prevent non-admins from altering stock_status
+        $validated['stock_status'] = $uniformRequest->stock_status ?? 'pending';
+    }
+
+    $uniformRequest->update($validated);
+
+    return redirect()
+        ->route('admin.uniform-requests.index')
+        ->with('success', __('uniform_requests.updated_successfully'));
+}
+
 
    public function destroy($id)
 {

@@ -41,6 +41,14 @@ class UniformRequest extends Model
         'non'        => 'Non',
     ];
 
+    // Stock-level status (NEW - matches migration enum)
+    public const STOCK_STATUS_OPTIONS = [
+        'in_stock'     => 'In Stock',
+        'out_of_stock' => 'Out of Stock',
+        'reserved'     => 'Reserved',
+        'pending'      => 'Pending',
+    ];
+
     protected $fillable = [
         'player_id',
         'user_id',
@@ -53,9 +61,10 @@ class UniformRequest extends Model
         'quantity',
         'amount',
         'status',
-        'branch_status',   // NEW
-        'office_status',   // NEW
-        'payment_method',  // NEW
+        'branch_status',
+        'office_status',
+        'stock_status',   // NEW
+        'payment_method',
         'request_date',
         'approved_at',
         'ordered_at',
@@ -83,7 +92,7 @@ class UniformRequest extends Model
     public function branch()   { return $this->belongsTo(Branch::class); }
     public function currency() { return $this->belongsTo(Currency::class); }
 
-    // Optional: handy accessors for labels (useful in Blade)
+    // Accessors for labels
     public function getStatusLabelAttribute(): string
     {
         return self::STATUS_OPTIONS[$this->status] ?? ucfirst((string) $this->status);
@@ -99,8 +108,14 @@ class UniformRequest extends Model
         return self::OFFICE_STATUS_OPTIONS[$this->office_status] ?? ucfirst((string) $this->office_status);
     }
 
-    // Optional scopes for filtering
+    public function getStockStatusLabelAttribute(): string
+    {
+        return self::STOCK_STATUS_OPTIONS[$this->stock_status] ?? ucfirst((string) $this->stock_status);
+    }
+
+    // Scopes for filtering
     public function scopeBranchStatus($q, $status) { return $q->where('branch_status', $status); }
     public function scopeOfficeStatus($q, $status) { return $q->where('office_status', $status); }
     public function scopeMainStatus($q, $status)   { return $q->where('status', $status); }
+    public function scopeStockStatus($q, $status)  { return $q->where('stock_status', $status); } // NEW
 }

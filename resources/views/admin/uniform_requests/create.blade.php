@@ -158,8 +158,7 @@
                         }}</label>
 
                     {{-- Hidden input to actually send the currency_id value --}}
-                    <input type="hidden" name="currency_id"
-                        value="{{ optional($currencies->firstWhere('code', 'AED'))->id }}">
+                    <input type="hidden" name="currency_id" value="{{ optional($currencies->firstWhere('code', 'AED'))->id }}">
 
                     {{-- Disabled select for display only --}}
                     <select class="form-control" disabled>
@@ -178,51 +177,65 @@
                     <textarea name="notes" rows="3" class="form-control"></textarea>
                 </div>
                 {{-- Branch Status --}}
-<div class="form-group col-md-4">
-    <label><i class="la la-sitemap text-muted mr-1"></i> {{ __('uniform_requests.fields.branch_status') }}</label>
-    <select name="branch_status" class="form-control">
-        <option value="">{{ __('uniform_requests.select_branch_status') }}</option>
-        @foreach (\App\Models\UniformRequest::BRANCH_STATUS_OPTIONS as $key => $label)
-            <option value="{{ $key }}" {{ old('branch_status') === $key ? 'selected' : '' }}>
-                {{ __('uniform_requests.branch_statuses.' . $key) }}
-            </option>
-        @endforeach
-    </select>
-</div>
+                <div class="form-group col-md-4">
+                    <label><i class="la la-sitemap text-muted mr-1"></i> {{ __('uniform_requests.fields.branch_status') }}</label>
+                    <select name="branch_status" class="form-control">
+                        <option value="">{{ __('uniform_requests.select_branch_status') }}</option>
+                        @foreach (\App\Models\UniformRequest::BRANCH_STATUS_OPTIONS as $key => $label)
+                        <option value="{{ $key }}" {{ old('branch_status') === $key ? 'selected' : '' }}>
+                            {{ __('uniform_requests.branch_statuses.' . $key) }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
 
-{{-- Office Status (admins only) --}}
-@php $user = Auth::user(); @endphp
+                {{-- Office Status (admins only) --}}
+               @php $user = Auth::user(); @endphp
 @if (in_array($user->role, ['full_admin', 'system_admin']))
-<div class="form-group col-md-4">
-    <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
-    <select name="office_status" class="form-control">
-        <option value="">{{ __('uniform_requests.select_office_status') }}</option>
-        @foreach (\App\Models\UniformRequest::OFFICE_STATUS_OPTIONS as $key => $label)
-            <option value="{{ $key }}" {{ old('office_status') === $key ? 'selected' : '' }}>
-                {{ __('uniform_requests.office_statuses.' . $key) }}
-            </option>
-        @endforeach
-    </select>
-</div>
+    <div class="form-group col-md-4">
+        <label><i class="la la-building text-muted mr-1"></i> {{ __('uniform_requests.fields.office_status') }}</label>
+        <select name="office_status" class="form-control">
+            <option value="">{{ __('uniform_requests.select_office_status') }}</option>
+            @foreach (\App\Models\UniformRequest::OFFICE_STATUS_OPTIONS as $key => $label)
+                <option value="{{ $key }}" {{ old('office_status') === $key ? 'selected' : '' }}>
+                    {{ __('uniform_requests.office_statuses.' . $key) }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    {{-- NEW: Stock Status --}}
+    <div class="form-group col-md-4">
+        <label><i class="la la-warehouse text-muted mr-1"></i> {{ __('uniform_requests.fields.stock_status') }}</label>
+        <select name="stock_status" class="form-control">
+            <option value="">{{ __('uniform_requests.select_stock_status') }}</option>
+            @foreach (\App\Models\UniformRequest::STOCK_STATUS_OPTIONS as $key => $label)
+                <option value="{{ $key }}" {{ old('stock_status') === $key ? 'selected' : '' }}>
+                    {{ __('uniform_requests.stock_statuses.' . $key) }}
+                </option>
+            @endforeach
+        </select>
+    </div>
 @endif
 
-{{-- Payment Method (varchar) --}}
-<div class="form-group col-md-4">
-    <label><i class="la la-credit-card text-muted mr-1"></i> {{ __('uniform_requests.fields.payment_method') }}</label>
-    <select name="payment_method" class="form-control">
-        <option value="">{{ __('uniform_requests.select_payment_method') }}</option>
-        @foreach($paymentMethods as $pm)
-            @php
-                $label = app()->getLocale() === 'ar'
-                    ? ($pm->name_ar ?? $pm->name)
-                    : (app()->getLocale() === 'ur' ? ($pm->name_ur ?? $pm->name) : $pm->name);
-            @endphp
-            <option value="{{ $label }}" {{ old('payment_method') === $label ? 'selected' : '' }}>
-                {{ $label }}
-            </option>
-        @endforeach
-    </select>
-</div>
+
+                {{-- Payment Method (varchar) --}}
+                <div class="form-group col-md-4">
+                    <label><i class="la la-credit-card text-muted mr-1"></i> {{ __('uniform_requests.fields.payment_method') }}</label>
+                    <select name="payment_method" class="form-control">
+                        <option value="">{{ __('uniform_requests.select_payment_method') }}</option>
+                        @foreach($paymentMethods as $pm)
+                        @php
+                        $label = app()->getLocale() === 'ar'
+                        ? ($pm->name_ar ?? $pm->name)
+                        : (app()->getLocale() === 'ur' ? ($pm->name_ur ?? $pm->name) : $pm->name);
+                        @endphp
+                        <option value="{{ $label }}" {{ old('payment_method') === $label ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             <div class="text-right">
@@ -239,54 +252,56 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-             $('.select2').select2();
+        $('.select2').select2();
 
-            // On system change → load branches and items
-            $('#system_id').on('change', function() {
-                const systemId = $(this).val();
+        // On system change → load branches and items
+        $('#system_id').on('change', function() {
+            const systemId = $(this).val();
 
-                $('#branch_id').html(`<option value="">${@json(__('uniform_requests.select_branch'))}</option>`);
-                $('#player_id').html(`<option value="">${@json(__('uniform_requests.select_player'))}</option>`);
-                $('#item_id').html(`<option value="">${@json(__('uniform_requests.select_item'))}</option>`);
+            $('#branch_id').html(`<option value="">${@json(__('uniform_requests.select_branch'))}</option>`);
+            $('#player_id').html(`<option value="">${@json(__('uniform_requests.select_player'))}</option>`);
+            $('#item_id').html(`<option value="">${@json(__('uniform_requests.select_item'))}</option>`);
 
-                if (systemId) {
-                    // Get branches
-                    $.get(`/admin/get-branches-by-system/${systemId}`, function(branches) {
-                        branches.forEach(function(branch) {
-                            $('#branch_id').append(
-                                `<option value="${branch.id}">${branch.name}</option>`);
-                        });
+            if (systemId) {
+                // Get branches
+                $.get(`/admin/get-branches-by-system/${systemId}`, function(branches) {
+                    branches.forEach(function(branch) {
+                        $('#branch_id').append(
+                            `<option value="${branch.id}">${branch.name}</option>`);
                     });
+                });
 
-                    // Get items
-                    $.get(`/admin/get-items-by-system/${systemId}`, function(items) {
-                        items.forEach(function(item) {
-                            $('#item_id').append(
-                                `<option value="${item.id}">${item.name_en}</option>`);
-                        });
+                // Get items
+                $.get(`/admin/get-items-by-system/${systemId}`, function(items) {
+                    items.forEach(function(item) {
+                        $('#item_id').append(
+                            `<option value="${item.id}">${item.name_en}</option>`);
                     });
-                }
-            });
-
-            // On branch change → get players
-            $('#branch_id').on('change', function() {
-                const branchId = $(this).val();
-
-                $('#player_id').html(`<option value="">${@json(__('uniform_requests.select_player'))}</option>`);
-
-                if (branchId) {
-                    $.get(`/admin/get-players-by-branch/${branchId}`, function(players) {
-                        players.forEach(function(player) {
-                            if (player.user) {
-                                $('#player_id').append(
-                                    `<option value="${player.id}">${player.user.name}</option>`
-                                    );
-                            }
-                        });
-                    });
-                }
-            });
-
+                });
+            }
         });
+
+        // On branch change → get players
+        $('#branch_id').on('change', function() {
+            const branchId = $(this).val();
+
+            $('#player_id').html(`<option value="">${@json(__('uniform_requests.select_player'))}</option>`);
+
+            if (branchId) {
+                $.get(`/admin/get-players-by-branch/${branchId}`, function(players) {
+                    players.forEach(function(player) {
+                        if (player.user) {
+                            $('#player_id').append(
+                                `<option value="${player.id}">${player.user.name}</option>`
+                            );
+                        }
+                    });
+                });
+            }
+        });
+
+    });
+
 </script>
 @endpush
+

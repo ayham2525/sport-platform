@@ -82,6 +82,7 @@ return [
         'ordered_at'     => 'Ordered At',
         'delivered_at'   => 'Delivered At',
         'request_date' => 'Request Date',
+         'stock_status' => 'Stock Status',
     ],
 
     // Actions
@@ -138,5 +139,14 @@ return [
 
     'messages' => [
         'no_requests' => 'No Unoforms'
-    ]
+    ],
+
+    'select_stock_status' => 'Select stock status',
+    'stock_statuses' => [
+        'in_stock'     => 'In Stock',
+        'out_of_stock' => 'Out of Stock',
+        'reserved'     => 'Reserved',
+        'pending'      => 'Pending',
+    ],
+
 ];
