@@ -51,7 +51,32 @@ public function index(Request $request)
         case 'academy_admin':
         case 'coach':
         case 'player':
-            $academyIds = json_decode($user->academy_id, true) ?? [];
+            // --- Normalize academy_id to an int[] safely ---
+            $raw = $user->academy_id;
+            if ($raw instanceof \Illuminate\Support\Collection) {
+                $academyIds = $raw->map(fn($v) => (int) $v)->filter()->values()->all();
+            } elseif (is_array($raw)) {
+                $academyIds = array_values(array_filter(array_map('intval', $raw)));
+            } elseif (is_null($raw) || $raw === '') {
+                $academyIds = [];
+            } elseif (is_int($raw) || ctype_digit((string) $raw)) {
+                $academyIds = [ (int) $raw ];
+            } elseif (is_string($raw)) {
+                $trim = trim($raw);
+                if ($trim !== '' && $trim[0] === '[' && substr($trim, -1) === ']') {
+                    $decoded = json_decode($trim, true);
+                    $academyIds = is_array($decoded)
+                        ? array_values(array_filter(array_map('intval', $decoded)))
+                        : [];
+                } else {
+                    $parts = preg_split('/\s*,\s*/', $trim);
+                    $academyIds = array_values(array_filter(array_map('intval', (array) $parts)));
+                }
+            } else {
+                $academyIds = [];
+            }
+            // -----------------------------------------------
+
             if (!empty($academyIds)) {
                 $query->whereIn('id', $academyIds);
                 $branchIds = Academy::whereIn('id', $academyIds)->pluck('branch_id')->unique();
