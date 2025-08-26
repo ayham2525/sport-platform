@@ -8,6 +8,8 @@ class PaymentMethod extends Model
 {
     use SoftDeletes;
 
+      const MODEL_NAME = 'Payment Method';
+
     protected $fillable = [
         'name',
         'name_ar',

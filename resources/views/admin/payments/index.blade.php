@@ -106,7 +106,7 @@
 @endif
 
         <div class="mb-4 text-right">
-            @if (PermissionHelper::hasPermission('create', App\Models\Player::MODEL_NAME))
+            @if (PermissionHelper::hasPermission('create', App\Models\Payment::MODEL_NAME))
             <a href="{{ route('admin.payments.create') }}" class="btn btn-success">
                 <i class="fas fa-plus mr-1"></i> {{ __('payment.actions.create') }}
             </a>
