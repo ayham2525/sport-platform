@@ -60,6 +60,7 @@
                     <thead>
                         <tr>
                             <th>#</th>
+                             <th>{{ __('columns.system') }}</th>
                             <th>{{ __('columns.role') }}</th>
                               <th>{{ __('columns.model') }}</th>
                             <th>{{ __('columns.action') }}</th>
@@ -71,6 +72,7 @@
                         @foreach ($paginated as $index => $permission)
                             <tr>
                                 <td>{{ $index + $paginated->firstItem() }}</td>
+                                <td>{{ $permission->role->system->name ?? 'N/A' }}</td>
                                 <td>{{ $permission->role->name ?? 'N/A' }}</td>
                                 <td>{{ $permission->model->name ?? 'N/A' }}</td>
                                 <td>{{ ucfirst($permission->action) }}</td>
