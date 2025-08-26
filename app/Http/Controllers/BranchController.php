@@ -24,44 +24,176 @@ class BranchController extends Controller
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
-    {
-        if (!PermissionHelper::hasPermission('view', Branch::MODEL_NAME)) {
-            return PermissionHelper::denyAccessResponse();
-        }
-        $query = Branch::with('city.state.country', 'system');
-
-        if ($request->filled('country_id')) {
-            $query->whereHas('city.state', function ($q) use ($request) {
-                $q->where('country_id', $request->country_id);
-            });
-        }
-
-        if ($request->filled('state_id')) {
-            $query->whereHas('city', function ($q) use ($request) {
-                $q->where('state_id', $request->state_id);
-            });
-        }
-
-        if ($request->filled('city_id')) {
-            $query->where('city_id', $request->city_id);
-        }
-
-        if ($request->filled('system_id')) {
-            $query->where('system_id', $request->system_id);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status);
-        }
-
-        $branches = $query->latest()->get();
-        $countries = Country::where('is_active', 1)->get();
-        $states = $request->filled('country_id') ? State::where('country_id', $request->country_id)->where('is_active', 1)->get() : collect();
-        $cities = $request->filled('state_id') ? City::where('state_id', $request->state_id)->where('is_active', 1)->get() : collect();
-        $systems = System::all();
-
-        return view('admin.branch.index', compact('branches', 'countries', 'states', 'cities', 'systems'));
+{
+    if (!PermissionHelper::hasPermission('view', Branch::MODEL_NAME)) {
+        return PermissionHelper::denyAccessResponse();
     }
+
+    $user  = auth()->user();
+    $query = Branch::with('city.state.country', 'system');
+
+    // ---- Role-based scope ----
+    $allowedBranchIds = null; // null => no restriction (full_admin)
+
+    switch ($user->role) {
+        case 'system_admin':
+            if (!empty($user->system_id)) {
+                $allowedBranchIds = Branch::where('system_id', $user->system_id)->pluck('id');
+                $query->whereIn('id', $allowedBranchIds);
+            } else {
+                $query->whereRaw('0 = 1');
+                $allowedBranchIds = collect();
+            }
+            break;
+
+        case 'branch_admin':
+            if (!empty($user->branch_id)) {
+                $allowedBranchIds = collect([(int) $user->branch_id]);
+                $query->where('id', (int) $user->branch_id);
+            } else {
+                $query->whereRaw('0 = 1');
+                $allowedBranchIds = collect();
+            }
+            break;
+
+        case 'academy_admin':
+        case 'coach':
+        case 'player':
+            $academyIds = $this->normalizeAcademyIds($user->academy_id);
+            if (!empty($academyIds)) {
+                $allowedBranchIds = Academy::whereIn('id', $academyIds)
+                    ->pluck('branch_id')->unique()->values();
+                if ($allowedBranchIds->isNotEmpty()) {
+                    $query->whereIn('id', $allowedBranchIds);
+                } else {
+                    $query->whereRaw('0 = 1');
+                    $allowedBranchIds = collect();
+                }
+            } else {
+                $query->whereRaw('0 = 1');
+                $allowedBranchIds = collect();
+            }
+            break;
+
+        default:
+            // full_admin or higher => no restriction
+            break;
+    }
+
+    // ---- Filters (still within scope) ----
+    if ($request->filled('country_id')) {
+        $query->whereHas('city.state', function ($q) use ($request) {
+            $q->where('country_id', $request->country_id);
+        });
+    }
+
+    if ($request->filled('state_id')) {
+        $query->whereHas('city', function ($q) use ($request) {
+            $q->where('state_id', $request->state_id);
+        });
+    }
+
+    if ($request->filled('city_id')) {
+        $query->where('city_id', $request->city_id);
+    }
+
+    if ($request->filled('system_id')) {
+        $query->where('system_id', $request->system_id);
+    }
+
+    if ($request->filled('status')) {
+        $query->where('is_active', $request->status);
+    }
+
+    // DataTables (client-side) -> full collection
+    $branches = $query->latest()->get();
+
+    // ---- Scoped dropdowns ----
+    if (is_null($allowedBranchIds)) {
+        // Full scope
+        $countries = Country::where('is_active', 1)->get();
+        $states    = $request->filled('country_id')
+            ? State::where('country_id', $request->country_id)->where('is_active', 1)->get()
+            : collect();
+        $cities    = $request->filled('state_id')
+            ? City::where('state_id', $request->state_id)->where('is_active', 1)->get()
+            : collect();
+        $systems   = System::all();
+    } else {
+        $ids = $allowedBranchIds instanceof \Illuminate\Support\Collection
+            ? $allowedBranchIds->all()
+            : (array) $allowedBranchIds;
+
+        if (empty($ids)) {
+            $countries = collect();
+            $states    = collect();
+            $cities    = collect();
+            $systems   = collect();
+        } else {
+            $scopedBranches = Branch::whereIn('id', $ids)->get(['id', 'city_id', 'system_id']);
+
+            $cityIds    = $scopedBranches->pluck('city_id')->filter()->unique()->values();
+            $stateIds   = City::whereIn('id', $cityIds)->pluck('state_id')->filter()->unique()->values();
+            $countryIds = State::whereIn('id', $stateIds)->pluck('country_id')->filter()->unique()->values();
+            $systemIds  = $scopedBranches->pluck('system_id')->filter()->unique()->values();
+
+            $countries = Country::whereIn('id', $countryIds)->where('is_active', 1)->get();
+
+            $states = $request->filled('country_id')
+                ? State::where('country_id', $request->country_id)
+                    ->whereIn('id', $stateIds)->where('is_active', 1)->get()
+                : State::whereIn('id', $stateIds)->where('is_active', 1)->get();
+
+            $cities = $request->filled('state_id')
+                ? City::where('state_id', $request->state_id)
+                    ->whereIn('id', $cityIds)->where('is_active', 1)->get()
+                : City::whereIn('id', $cityIds)->where('is_active', 1)->get();
+
+            $systems = System::whereIn('id', $systemIds)->get();
+        }
+    }
+
+    return view('admin.branch.index', compact('branches', 'countries', 'states', 'cities', 'systems'));
+}
+
+/**
+ * Normalize user->academy_id to an int[].
+ * Accepts: array, Collection, JSON array string, CSV string, single id, null.
+ */
+private function normalizeAcademyIds($raw): array
+{
+    if ($raw instanceof \Illuminate\Support\Collection) {
+        $raw = $raw->all();
+    }
+
+    if (is_array($raw)) {
+        return array_values(array_filter(array_map('intval', $raw)));
+    }
+
+    if (is_null($raw) || $raw === '') {
+        return [];
+    }
+
+    // single int or numeric string
+    if (is_int($raw) || ctype_digit((string) $raw)) {
+        return [ (int) $raw ];
+    }
+
+    $trim = trim((string) $raw);
+
+    // JSON array string: starts with '[' and ends with ']'
+    if ($trim !== '' && $trim[0] === '[' && substr($trim, -1) === ']') {
+        $decoded = json_decode($trim, true);
+        if (is_array($decoded)) {
+            return array_values(array_filter(array_map('intval', $decoded)));
+        }
+    }
+
+    // CSV string
+    $parts = preg_split('/\s*,\s*/', $trim);
+    return array_values(array_filter(array_map('intval', (array) $parts)));
+}
+
 
     /**
      * Show the form for creating a new branch.
