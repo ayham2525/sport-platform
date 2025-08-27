@@ -126,7 +126,7 @@
                                     <a href="{{ route('admin.branches.items', $branch->id) }}" class="btn btn-sm btn-clean btn-icon" title="{{ __('branch.view_items') }}">
                                       <i class="la la-box"></i>
                                     </a>
-                                    @if (PermissionHelper::hasPermission('edit', App\Models\Branch::MODEL_NAME))
+                                    @if (PermissionHelper::hasPermission('update', App\Models\Branch::MODEL_NAME))
                                     <a href="{{ route('admin.branches.edit', $branch->id) }}" class="btn btn-sm btn-clean btn-icon" title="{{ __('branch.edit') }}">
                                         <i class="la la-edit"></i>
                                     </a>
