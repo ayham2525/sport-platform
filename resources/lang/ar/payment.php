@@ -36,6 +36,10 @@ return [
         'classes'           => 'الحصص',
         'price'             => 'السعر',
         'is_vat_inclusive' => 'نوع الضريبة',
+        'system' => 'النظام',
+        'branch' => 'الفرع',
+        'academy' => 'الاكادميه',
+
     ],
      'vat' => [
         'inclusive' => 'شامل الضريبة',

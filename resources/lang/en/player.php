@@ -94,6 +94,7 @@ return [
         'program' => 'Program',
         'user_name' => 'Player Name',
         'player_status' => 'Player Status',
+        '' => '',
 
     ],
      'status' => [

@@ -37,6 +37,9 @@ return [
         'price' => 'Price',
         'is_vat_inclusive' => 'VAT Type',
         'player_id' => 'Search by Player ID',
+        'system' => 'System',
+        'branch' => 'Branch',
+        'academy' => 'Academy'
     ],
 
     'status' => [

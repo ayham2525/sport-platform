@@ -93,6 +93,7 @@ return [
         'program' => 'البرنامج',
         'user_name' => 'اسم اللاعب',
         'player_status' => 'حالة اللاعب',
+         '' => '',
     ],
 
     'status' => [
