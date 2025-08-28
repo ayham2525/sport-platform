@@ -119,7 +119,8 @@
                                 <th>{{ $tr('player.academy', 'Academy') }}</th>
                                 <th>{{ $tr('player.branch', 'Branch') }}</th>
                                 <th>{{ $tr('player.status.title', 'Status') }}</th>
-                                <th>{{ $tr('player.created_at', 'Created at') }}</th>
+                                <th>{{ $tr('player.fields.card_serial_number', 'Card Serial Number') }}</th>
+                                 <th>{{ $tr('player.created_at', 'Created at') }}</th>
                                 <th>{{ $tr('player.actions', 'Actions') }}</th>
                             </tr>
                         </thead>
@@ -240,6 +241,8 @@ document.addEventListener('DOMContentLoaded', function () {
               .map(pr => `<span class="badge badge-info badge-program mr-1 mb-1" data-program-id="${pr.id}">${pr.name}</span>`)
               .join('') || '-';
 
+    const scanRouteTemplate = "{{ route('admin.cards.scan', ['player_id' => ':id']) }}";
+
             tbody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td>${rowNum}</td>
@@ -252,12 +255,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td>${p.academy ?? '-'}</td>
                     <td>${p.branch ?? '-'}</td>
                     <td><span class="badge ${badgeCls}">${badgeText}</span></td>
+                    <td>${p.card_serial_number ?? '-'}</td>
                     <td>${p.created_at ?? '-'}</td>
                     <td>
-                        <a href="/admin/players/${p.id}" class="btn btn-sm btn-clean btn-icon" title="${VIEW_TXT}">
-                            <i class="la la-eye"></i>
-                        </a>
-                    </td>
+            <a href="/admin/players/${p.id}" class="btn btn-sm btn-clean btn-icon" title="${VIEW_TXT}">
+                <i class="la la-eye"></i>
+            </a>
+            <a href="${scanRouteTemplate.replace(':id', p.id)}"
+               class="btn btn-sm btn-clean btn-icon"
+               title="{{ __('player.actions.scan_card') }}">
+                <i class="la la-id-card"></i>
+            </a>
+        </td>
                 </tr>
             `);
         });

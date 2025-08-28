@@ -87,6 +87,7 @@
                 </td>
                 <td>{{ $item->pivot->notes }}</td>
                 <td>
+
                     {{-- Edit Button --}}
                     @if (PermissionHelper::hasPermission('update', App\Models\BranchItem::MODEL_NAME))
                     <button type="button" class="btn btn-sm btn-clean btn-icon edit-item"
