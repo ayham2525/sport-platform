@@ -395,12 +395,13 @@ public function players(Request $request, $branchId)
     // 3) Build the main listing query (with eager loads)
     $base = Player::query()
         ->with([
-            'user:id,name,email',
+            // include card_serial_number here
+            'user:id,name,email,card_serial_number',
             'sport:id,name_en,name_ar',
             'nationality:id,name_en,name_ar',
             'academy:id,name_en,name_ar',
             'branch:id,name',
-            // limit eager-loaded programs to THIS branch to keep the list relevant
+            // limit eager-loaded programs to THIS branch
             'programs' => function ($q) use ($branchId) {
                 $q->select('programs.id','name_en','name_ar','branch_id','academy_id')
                   ->where('branch_id', $branchId)
@@ -435,7 +436,9 @@ public function players(Request $request, $branchId)
         $search = trim((string) $request->input('search'));
         $base->whereHas('user', function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+              ->orWhere('email', 'like', "%{$search}%")
+              // search by card serial too
+              ->orWhere('card_serial_number', 'like', "%{$search}%");
         });
     }
 
@@ -443,7 +446,7 @@ public function players(Request $request, $branchId)
     $activeCount  = (clone $base)->where('status', 'active')->count();
     $expiredCount = (clone $base)->where('status', 'expired')->count();
 
-    // 6) Programs list for the program dropdown (depends on selected academy or all)
+    // 6) Program list for the program dropdown
     $programs = Program::query()
         ->where('branch_id', $branchId)
         ->when($academyId, fn($q) => $q->where('academy_id', $academyId))
@@ -466,29 +469,19 @@ public function players(Request $request, $branchId)
             $programNames = $p->programs->map(fn($pr) => app()->getLocale()==='ar' ? ($pr->name_ar ?? $pr->name_en) : $pr->name_en)->join(', ');
 
             return [
-                'ID'              => $p->id,
-                'Name'            => optional($p->user)->name,
-                'Email'           => optional($p->user)->email,
-                'Phone'           => $p->guardian_phone,
-                'Branch'          => optional($p->branch)->name,
-                'Academy'         => $academyName,
-                'Programs'        => $programNames,
-                'Sport'           => $sport,
-                'Nationality'     => $nationality,
-                'Gender'          => $p->gender,
-                'Player Code'     => $p->player_code,
-                'Birth Date'      => $p->birth_date,
-                'Guardian Name'   => $p->guardian_name,
-                'Guardian Phone'  => $p->guardian_phone,
-                'Position'        => $p->position,
-                'Level'           => $p->level,
-                'Shirt Size'      => $p->shirt_size,
-                'Shorts Size'     => $p->shorts_size,
-                'Shoe Size'       => $p->shoe_size,
-                'Medical Notes'   => $p->medical_notes,
-                'Remarks'         => $p->remarks,
-                'Status'          => $p->status,
-                'Created At'      => optional($p->created_at)->format('Y-m-d'),
+                'ID'                   => $p->id,
+                'User ID'              => $p->user_id,
+                'Card Serial Number'   => optional($p->user)->card_serial_number,
+                'Name'                 => optional($p->user)->name,
+                'Email'                => optional($p->user)->email,
+                'Phone'                => $p->guardian_phone,
+                'Branch'               => optional($p->branch)->name,
+                'Academy'              => $academyName,
+                'Programs'             => $programNames,
+                'Sport'                => $sport,
+                'Nationality'          => $nationality,
+                'Status'               => $p->status,
+                'Created At'           => optional($p->created_at)->format('Y-m-d'),
             ];
         });
 
@@ -500,7 +493,7 @@ public function players(Request $request, $branchId)
                 \Maatwebsite\Excel\Concerns\WithHeadings {
                 private $rows;
                 public function __construct($rows) { $this->rows = $rows; }
-                public function array(): array   { return $this->rows->values()->toArray(); }
+                public function array(): array    { return $this->rows->values()->toArray(); }
                 public function headings(): array { return array_keys($this->rows->first() ?? []); }
             };
             return \Maatwebsite\Excel\Facades\Excel::download($export, $filename.'.xlsx');
@@ -547,63 +540,66 @@ public function players(Request $request, $branchId)
             });
 
             return [
-                'id'             => $player->id,
-                'name'           => optional($player->user)->name ?? '',
-                'email'          => optional($player->user)->email ?? '',
-                'phone'          => $player->guardian_phone ?? '',
-                'birth_date'     => $player->birth_date,
-                'gender'         => $player->gender,
-                'player_code'    => $player->player_code,
-                'guardian_name'  => $player->guardian_name,
-                'guardian_phone' => $player->guardian_phone,
-                'position'       => $player->position,
-                'level'          => $player->level,
-                'shirt_size'     => $player->shirt_size,
-                'shorts_size'    => $player->shorts_size,
-                'shoe_size'      => $player->shoe_size,
-                'medical_notes'  => $player->medical_notes,
-                'remarks'        => $player->remarks,
-                'sport'          => $player->sport
+                'id'                  => $player->id,
+                'user_id'             => $player->user_id, // <- add user_id
+                'card_serial_number'  => optional($player->user)->card_serial_number, // <- add card serial
+                'name'                => optional($player->user)->name ?? '',
+                'email'               => optional($player->user)->email ?? '',
+                'phone'               => $player->guardian_phone ?? '',
+                'birth_date'          => $player->birth_date,
+                'gender'              => $player->gender,
+                'player_code'         => $player->player_code,
+                'guardian_name'       => $player->guardian_name,
+                'guardian_phone'      => $player->guardian_phone,
+                'position'            => $player->position,
+                'level'               => $player->level,
+                'shirt_size'          => $player->shirt_size,
+                'shorts_size'         => $player->shorts_size,
+                'shoe_size'           => $player->shoe_size,
+                'medical_notes'       => $player->medical_notes,
+                'remarks'             => $player->remarks,
+                'sport'               => $player->sport
                     ? (app()->getLocale()==='ar' ? $player->sport->name_ar : $player->sport->name_en)
                     : '-',
-                'nationality'    => $player->nationality
+                'nationality'         => $player->nationality
                     ? (app()->getLocale()==='ar' ? $player->nationality->name_ar : $player->nationality->name_en)
                     : '-',
-                'academy'        => $player->academy
+                'academy'             => $player->academy
                     ? (app()->getLocale()==='ar' ? $player->academy->name_ar : $player->academy->name_en)
                     : '-',
-                'branch'         => optional($player->branch)->name,
-                'programs'       => $programs,
-                'created_at'     => optional($player->created_at)->format('Y-m-d'),
-                'status'         => $player->status ?? 'expired',
-                'payments'       => $payments,
+                'branch'              => optional($player->branch)->name,
+                'programs'            => $programs,
+                'created_at'          => optional($player->created_at)->format('Y-m-d'),
+                'status'              => $player->status ?? 'expired',
+                'payments'            => $payments,
             ];
         });
 
         return response()->json([
-            'players' => $playersData->values(),
+            'players'    => $playersData->values(),
             'pagination' => [
                 'current_page' => $players->currentPage(),
                 'last_page'    => $players->lastPage(),
                 'total'        => $players->total(),
                 'from'         => $players->firstItem() ?? 0,
             ],
-            'counts' => [
+            'counts'     => [
                 'active'  => $activeCount,
                 'expired' => $expiredCount,
             ],
-            'academies' => $academies,
-            'programs'  => $programs->map(fn($p) => [
+            'academies'  => $academies,
+            'programs'   => $programs->map(fn($p) => [
                 'id'   => $p->id,
                 'name' => app()->getLocale()==='ar' ? ($p->name_ar ?? $p->name_en) : $p->name_en,
             ])->values(),
         ]);
     }
 
-    // Full page render (server counts + academies for initial UI)
+    // Full page render
     return view('admin.branch.players', compact(
         'branch', 'players', 'activeCount', 'expiredCount', 'academies'
     ));
 }
+
 
 }
