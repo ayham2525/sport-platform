@@ -12,7 +12,10 @@
                 <th>{{ __('player.fields.branch') }}</th>
                 <th>{{ __('player.fields.academy') }}</th>
                 <th>{{ __('player.fields.nationality') }}</th>
+                <th>{{ __('player.fields.guardian_phone') }}</th>
+
                 <th>{{ __('player.fields.gender') }}</th>
+                 <th>{{ __('player.fields.birth_date') }}</th>
                 <th>{{ __('player.fields.created_at') }}</th>
                 <th>{{ __('player.fields.payment_start_date') }}</th>
                 <th>{{ __('player.fields.payment_end_date') }}</th>
@@ -59,7 +62,9 @@
                 <td>{{ $player->branch->name ?? '-' }}</td>
                 <td>{{ app()->getLocale()==='ar' ? ($player->academy->name_ar ?? $player->academy->name_en ?? '-') : ($player->academy->name_en ?? $player->academy->name_ar ?? '-') }}</td>
                 <td>{{ app()->getLocale() === 'ar' ? ($player->nationality->name_ar ?? '-') : ($player->nationality->name_en ?? '-') }}</td>
+                <td>{{ $player->guardian_phone ?? '-' }}</td>
                 <td>{{ $player->gender ? __('player.fields.' . $player->gender) : '-' }}</td>
+                <td>{{ $player->birth_date ? \Carbon\Carbon::parse($player->birth_date)->format('Y-m-d') : '-' }}</td>
                 <td>{{ optional($player->user->created_at)->format('Y-m-d') }}</td>
                 <td>{{ $latestPayment && $latestPayment->start_date ? $latestPayment->start_date->format('d/m/Y') : '-' }}</td>
                 <td>{{ $latestPayment && $latestPayment->end_date   ? $latestPayment->end_date->format('d/m/Y')   : '-' }}</td>

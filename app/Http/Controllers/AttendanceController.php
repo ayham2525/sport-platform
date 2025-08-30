@@ -306,6 +306,7 @@ class AttendanceController extends Controller
         $page    = (int)($request->input('page', 1));
         $records = $q->paginate($perPage, ['*'], 'page', $page);
 
+
         $html = View::make('admin.attendance._table', compact('records'))->render();
 
         return response()->json([
