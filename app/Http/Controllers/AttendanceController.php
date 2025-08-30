@@ -245,43 +245,80 @@ class AttendanceController extends Controller
         return view('admin.attendance.scan');
     }
 
-    public function scanStore(Request $request)
-    {
-        $request->validate([
-            'card_serial_number' => 'required|string|max:50',
-        ]);
+  public function scanStore(Request $request)
+{
+    $request->validate([
+        'card_serial_number' => 'required|string|max:50',
+    ]);
 
-        $user = User::where('card_serial_number', $request->card_serial_number)->first();
-        if (!$user) {
-            return response()->json(['ok' => false, 'message' => __('attendance.messages.not_found')], 404);
-        }
-
-        $playerId = null;
-        if ($user->role === 'player') {
-            $playerId = Player::where('user_id', $user->id)->value('id');
-        }
-
-        Attendance::create([
-            'user_id'    => $user->id,
-            'player_id'  => $playerId,
-            'branch_id'  => (string)($user->branch_id ?? ''), // DB column is varchar(191)
-            'scanned_at' => now(),
-        ]);
-
-        // return last 10 for this user
-        $records = Attendance::with(['user', 'player', 'branch'])
-            ->where('user_id', $user->id)
-            ->orderByDesc('scanned_at')
-            ->paginate(10);
-
-        $html = View::make('admin.attendance._table', compact('records'))->render();
-
-        return response()->json([
-            'ok'      => true,
-            'message' => __('attendance.messages.saved'),
-            'html'    => $html,
-        ]);
+    $user = User::where('card_serial_number', $request->card_serial_number)->first();
+    if (!$user) {
+        return response()->json(['ok' => false, 'message' => __('attendance.messages.not_found')], 404);
     }
+
+    $playerId = null;
+    $player   = null;
+    if ($user->role === 'player') {
+        $playerId = Player::where('user_id', $user->id)->value('id');
+        $player   = $playerId ? Player::with('branch')->find($playerId) : null;
+    }
+
+    // Save attendance (keep your varchar branch_id if your schema requires it)
+    Attendance::create([
+        'user_id'    => $user->id,
+        'player_id'  => $playerId,
+        'branch_id'  => (string)($user->branch_id ?? ''), // if your column is string
+        'scanned_at' => now(),
+    ]);
+
+    // Build last 10 records table
+    $records = Attendance::with(['user', 'player', 'branch' => fn($b) => $b->withTrashed()])
+        ->where('user_id', $user->id)
+        ->orderByDesc('scanned_at')
+        ->paginate(10);
+
+    $html = View::make('admin.attendance._table', compact('records'))->render();
+
+    // ---- NEW: compute subscription window + remaining classes for this player ----
+    $summaryHtml = '';
+    $summaryHtml = '';
+if ($player) {
+    $info = $player->latestProgramProgress();
+
+    $startStr = $info['start'] ? $info['start']->toDateString() : '-';
+    $prog     = e($info['program_name'] ?? '-');
+
+    // We’re not using end_date/phase anymore; keep a neutral badge
+    $badge = '<span class="badge badge-info">'.__('attendance.progress') ?? 'Progress'.'</span>';
+
+    $summaryHtml = '
+    <div class="alert alert-secondary" role="alert">
+        <div class="d-flex flex-wrap align-items-center">
+            <div class="mr-3"><strong>'.__('player.fields.name').':</strong> '.e(optional($player->user)->name ?? '-').'</div>
+            <div class="mr-3"><strong>'.__('attendance.fields.branch').':</strong> '.e(optional($player->branch)->name ?? ($player->branch_id ?? '-')).'</div>
+            <div class="mr-3"><strong>'.__('program.program').':</strong> '.$prog.'</div>
+            <div class="mr-3"><strong>'.__('attendance.fields.attended').':</strong> '.$info['attended'].' / '.$info['total_classes'].'</div>
+            <div class="mr-3"><strong>'.__('attendance.fields.remaining_classes').':</strong> '.$info['remaining'].'</div>
+            <div class="mr-3"><small class="text-muted">'.__('attendance.fields.date_from') .': '.$startStr.'</small></div>
+            <div class="ml-auto">'.$badge.'</div>
+        </div>
+    </div>';
+}else {
+        // Not a player; show a minimal notice (optional)
+        $summaryHtml = '
+        <div class="alert alert-light" role="alert">
+            '. __('attendance.messages.saved') .'
+        </div>';
+    }
+
+    return response()->json([
+        'ok'           => true,
+        'message'      => __('attendance.messages.saved'),
+        'html'         => $html,
+        'summary_html' => $summaryHtml,
+    ]);
+}
+
 
     /**
      * AJAX search with POST (date range + card serial) + pagination

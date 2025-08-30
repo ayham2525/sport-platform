@@ -2,6 +2,7 @@
 
 return [
      'title' => 'البرنامج',
+     'program'   => 'البرنامج',
     'titles' => [
         'programs' => 'البرامج',
         'dashboard' => 'لوحة التحكم',

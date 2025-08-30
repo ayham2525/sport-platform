@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
+use App\Models\Payment;
+use App\Models\Attendance;
 
 class Player extends Model
 {
@@ -91,8 +94,8 @@ class Player extends Model
     public function items()
     {
         return $this->belongsToMany(Item::class, 'uniform_requests')
-                    ->withPivot('size', 'color', 'quantity')
-                    ->withTimestamps();
+            ->withPivot('size', 'color', 'quantity')
+            ->withTimestamps();
     }
 
     public function card()
@@ -105,8 +108,110 @@ class Player extends Model
         return $this->hasMany(UniformRequest::class);
     }
 
-    public function scopeActive($q)  { return $q->where('status', self::STATUS_ACTIVE); }
-    public function scopeExpired($q) { return $q->where('status', self::STATUS_EXPIRED); }
+    public function scopeActive($q)
+    {
+        return $q->where('status', self::STATUS_ACTIVE);
+    }
+    public function scopeExpired($q)
+    {
+        return $q->where('status', self::STATUS_EXPIRED);
+    }
+
+
+
+    // ---------- Helpers ----------
+
+    public function lastProgramPayment()
+    {
+        return Payment::where('player_id', $this->id)
+            ->where('category', 'program')
+            ->whereIn('status', ['paid','partial'])
+            ->orderByDesc('end_date')
+            ->orderByDesc('payment_date')
+            ->first();
+    }
+
+    public function attendanceCountBetween(?Carbon $from, ?Carbon $to): int
+    {
+        if (!$from || !$to) return 0;
+
+        return Attendance::whereBetween('scanned_at', [$from, $to])
+            ->where(function ($q) {
+                // Prefer player_id, but count legacy rows that only stored user_id
+                $q->where('player_id', $this->id)
+                  ->orWhere(function ($qq) {
+                      $qq->whereNull('player_id')->where('user_id', $this->user_id);
+                  });
+            })
+            ->count();
+    }
+
+
+
+// Latest program payment for this player (paid/partial)
+public function latestProgramPayment(): ?Payment
+{
+    return Payment::with('program')
+        ->where('player_id', $this->id)
+        ->where('category', 'program')
+        ->whereIn('status', ['paid','partial'])
+        ->orderByDesc('payment_date')   // prefer real payment date
+        ->orderByDesc('created_at')     // fallback
+        ->first();
+}
+
+/**
+ * Super-simple progress:
+ *  - total = class_count from the latest program payment (fallback to program.class_count)
+ *  - attended = ALL attendance scans for this player (optionally from payment->start_date if present)
+ *  - remaining = max(total - attended, 0)
+ * No reliance on end_date.
+ */
+public function latestProgramProgress(): array
+{
+    $payment = $this->latestProgramPayment();
+
+    $programName = null;
+    $total = 0;
+
+    if ($payment) {
+        $total = (int)($payment->class_count ?? optional($payment->program)->class_count ?? 0);
+        $programName = optional($payment->program)->name_en
+            ?? optional($payment->program)->name_ar
+            ?? null;
+    }
+
+    if ($total === 0) {
+        $prog = $this->programs()->latest('player_program.created_at')->first();
+        if ($prog) {
+            $total = (int)($prog->class_count ?? 0);
+            $programName = $programName ?: ($prog->name_en ?? $prog->name_ar);
+        }
+    }
+
+    // Count ALL attendance records for this player (ignore start/end dates)
+    $attended = Attendance::query()
+        ->where(function ($q) {
+            $q->where('player_id', $this->id)
+              ->orWhere(function ($qq) {
+                  $qq->whereNull('player_id')->where('user_id', $this->user_id);
+              });
+        })
+        ->count();
+
+    $remaining = max($total - $attended, 0);
+
+    return [
+    'program_name'  => $programName,
+    'total_classes' => $total,
+    'attended'      => $attended,
+    'remaining'     => $remaining,
+    'payment_id'    => $payment?->id,
+    'start'         => $payment && $payment->start_date
+                        ? \Illuminate\Support\Carbon::parse($payment->start_date)->startOfDay()
+                        : null,   // <-- add this so the UI always has the key
+];
+}
 
 
 }

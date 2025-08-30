@@ -51,6 +51,9 @@ return [
         'date_to'    => 'Date To',
         'serial'     => 'Card Serial',
         'system'    => 'System',
+        'period'   => 'Period',
+        'attended' => 'Number of Attended Classes',
+        'remaining_classes' => 'Number of Remaining Classes',
 
     ],
     'messages' => [
@@ -60,6 +63,11 @@ return [
     'filters' => [
          'any'       => 'Any',
     ],
+    'confirm_delete' => 'Are you sure you want to delete this attendance record?',
+    'delete_warning' => 'This action will permanently delete the attendance record.',
+    'delete' => 'Delete',
+    'cancel' => 'Cancel',
+    'progress'  => 'Progress',
 
 
 

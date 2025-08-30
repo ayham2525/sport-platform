@@ -2,6 +2,7 @@
 
 return [
     'title' => 'program',
+    'program'   => 'Program',
     'titles' => [
         'programs' => 'Programs',
         'dashboard' => 'Dashboard',

@@ -37,8 +37,11 @@
             </form>
 
             <hr>
-            <h6 class="mb-3">{{ __('attendance.titles.view') }}</h6>
-            <div id="scanResults"></div>
+
+            <div id="scanSummary"></div>
+<h6 class="mb-3">{{ __('attendance.titles.view') }}</h6>
+<div id="scanResults"></div>
+
         </div>
     </div>
 </div>
@@ -47,6 +50,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const summary = document.getElementById('scanSummary');
     const input   = document.getElementById('card_serial_number');
     const status  = document.getElementById('nfcStatus');
     const saveBtn = document.getElementById('saveBtn');
@@ -63,6 +67,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // SweetAlert-powered delete + pagination rebinder
+    function bindResultEvents(){
+        // pagination (kept simple)
+        results.querySelectorAll('.ajax-page').forEach(a => {
+            a.addEventListener('click', ev => ev.preventDefault());
+        });
+
+        // DELETE with SweetAlert2
+        results.querySelectorAll('.ajax-delete').forEach(btn => {
+            btn.addEventListener('click', ev => {
+                ev.preventDefault();
+                const url = btn.dataset.url;
+                if (!url) return;
+
+                Swal.fire({
+                    title: "{{ __('attendance.confirm_delete') ?? 'Delete this record?' }}",
+                    text: "{{ __('attendance.delete_warning') ?? 'This action cannot be undone.' }}",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: "{{ __('attendance.delete') ?? 'Delete' }}",
+                    cancelButtonText: "{{ __('attendance.cancel') ?? 'Cancel' }}",
+                    confirmButtonColor: '#e3342f'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const fd = new FormData();
+                        fd.set('_token', form.querySelector('input[name=_token]').value);
+                        fd.set('_method', 'DELETE');
+
+                        fetch(url, { method: 'POST', body: fd })
+                          .then(r => {
+                              if (!r.ok) throw new Error('Network response was not ok');
+                              // Optimistically remove row from DOM
+                              const row = btn.closest('tr');
+                              if (row) row.remove();
+
+                              Swal.fire({
+                                  toast: true, position: 'top-end', timer: 2000, showConfirmButton: false,
+                                  icon: 'success',
+                                  title: "{{ __('attendance.deleted') ?? 'Deleted' }}"
+                              });
+                          })
+                          .catch(() => {
+                              Swal.fire({
+                                  icon: 'error',
+                                  title: "{{ __('attendance.delete_failed') ?? 'Delete failed' }}",
+                                  text: "{{ __('attendance.try_again') ?? 'Please try again.' }}"
+                              });
+                          });
+                    }
+                });
+            });
+        });
+    }
+
     input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); toggle(); }});
     input.addEventListener('input', toggle);
 
@@ -73,20 +131,26 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': fd.get('_token') },
             body: fd
-        }).then(r => r.json()).then(data => {
+        })
+        .then(r => r.json())
+        .then(data => {
             if (data.ok) {
-                status.textContent = data.message;
+                status.textContent = data.message || 'Saved';
+                if (data.summary_html) summary.innerHTML = data.summary_html;
                 results.innerHTML = data.html;
+                bindResultEvents(); // <-- bind after injecting partial
                 input.value = '';
                 toggle();
-                results.querySelectorAll('.ajax-page').forEach(a => {
-                    a.addEventListener('click', ev => ev.preventDefault()); // can extend to load more
-                });
             } else {
                 status.textContent = data.message || 'Error';
             }
-        }).catch(() => status.textContent = 'Network error');
+        })
+        .catch(() => status.textContent = 'Network error');
     });
+
+    // initial state
+    toggle();
 });
 </script>
 @endpush
+
