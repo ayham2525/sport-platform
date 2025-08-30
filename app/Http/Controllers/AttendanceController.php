@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Branch;
 use App\Models\Player;
 use App\Models\Attendance;
+use App\Models\System;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
@@ -17,73 +18,104 @@ use Illuminate\Support\Facades\View;
 class AttendanceController extends Controller
 {
     public function index(Request $request)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-       $query = Attendance::with([
-    'user',
-    'player',
-    'branch' => fn($q) => $q->withTrashed(),
-]);
+    $query = Attendance::with([
+        'user',
+        'player',
+        'branch' => fn($q) => $q->withTrashed(),
+    ]);
 
-        switch ($user->role) {
-            case 'full_admin':
-                // No scoping for full_admin
-                break;
-
-            case 'system_admin': // include if you use this role
-                if ($user->system_id) {
-                    $query->whereHas('user', fn($q) => $q->where('system_id', $user->system_id));
-                }
-                break;
-
-            case 'branch_admin':
-                if ($user->branch_id) {
-                    $query->whereHas('user', fn($q) => $q->where('branch_id', $user->branch_id));
-                }
-                break;
-
-            case 'academy_admin':
-                // academy_id may be int, JSON array, or array
-                $academyIds = $user->academy_id;
-                if (is_string($academyIds)) {
-                    $decoded = json_decode($academyIds, true);
-                    $academyIds = is_array($decoded) ? $decoded : (strlen($academyIds) ? [$academyIds] : []);
-                } elseif (is_int($academyIds)) {
-                    $academyIds = [$academyIds];
-                } elseif (!is_array($academyIds)) {
-                    $academyIds = [];
-                }
-
-                if (!empty($academyIds)) {
-                    $query->whereHas('player', fn($q) => $q->whereIn('academy_id', $academyIds));
-                }
-                break;
-
-            case 'player':
-                $query->where('user_id', $user->id);
-                break;
-
-            default:
-                abort(403);
-        }
-
-        // Default date range = current month, and always apply it
-        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
-        $endDate   = $request->input('end_date',   now()->endOfMonth()->toDateString());
-
-        $query->whereDate('scanned_at', '>=', $startDate)
-            ->whereDate('scanned_at', '<=', $endDate);
-
-        // Optional: filter by role of the related user
-        if ($request->filled('role')) {
-            $query->whereHas('user', fn($q) => $q->where('role', $request->role));
-        }
-
-        $attendances = $query->latest()->paginate(20);
-
-        return view('admin.attendance.index', compact('attendances', 'startDate', 'endDate'));
+    // ---------- Role scoping (unchanged) ----------
+    switch ($user->role) {
+        case 'full_admin':
+            break;
+        case 'system_admin':
+            if ($user->system_id) {
+                $query->whereHas('user', fn($q) => $q->where('system_id', $user->system_id));
+            }
+            break;
+        case 'branch_admin':
+            if ($user->branch_id) {
+                $query->whereHas('user', fn($q) => $q->where('branch_id', $user->branch_id));
+            }
+            break;
+        case 'academy_admin':
+            $academyIds = $user->academy_id;
+            if (is_string($academyIds)) {
+                $decoded = json_decode($academyIds, true);
+                $academyIds = is_array($decoded) ? $decoded : (strlen($academyIds) ? [$academyIds] : []);
+            } elseif (is_int($academyIds)) {
+                $academyIds = [$academyIds];
+            } elseif (!is_array($academyIds)) {
+                $academyIds = [];
+            }
+            if (!empty($academyIds)) {
+                $query->whereHas('player', fn($q) => $q->whereIn('academy_id', $academyIds));
+            }
+            break;
+        case 'player':
+            $query->where('user_id', $user->id);
+            break;
+        default:
+            abort(403);
     }
+
+    // ---------- Date range (unchanged) ----------
+    $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+    $endDate   = $request->input('end_date',   now()->endOfMonth()->toDateString());
+    $query->whereDate('scanned_at', '>=', $startDate)
+          ->whereDate('scanned_at', '<=', $endDate);
+
+    // ---------- Filters: role (unchanged) ----------
+    if ($request->filled('role')) {
+        $query->whereHas('user', fn($q) => $q->where('role', $request->role));
+    }
+
+    // ---------- NEW: Filters: system_id + branch_id ----------
+    $systemId = $request->input('system_id');
+    $branchId = $request->input('branch_id');
+
+    if ($systemId) {
+        // Filter via the related branch's system_id
+        $query->whereHas('branch', fn($b) => $b->withTrashed()->where('system_id', $systemId));
+    }
+
+    if ($branchId) {
+        $query->where('branch_id', $branchId);
+    }
+
+    $attendances = $query->latest()->paginate(20);
+
+    // ---------- Build filter dropdown data ----------
+    // Systems list (respect role)
+    $systemsQ = System::query()->orderBy('name');
+    if ($user->role === 'system_admin' && $user->system_id) {
+        $systemsQ->where('id', $user->system_id);
+    } elseif (!in_array($user->role, ['full_admin','system_admin'])) {
+        // For non-admin roles, keep the system dropdown single/readonly if they have one
+        if ($user->system_id) $systemsQ->where('id', $user->system_id);
+    }
+    $systems = $systemsQ->get();
+
+    // Branches list depends on selected system (and role)
+    $branchesQ = Branch::query()->orderBy('name');
+    if ($systemId) {
+        $branchesQ->where('system_id', $systemId);
+    } elseif ($user->system_id) {
+        $branchesQ->where('system_id', $user->system_id);
+    }
+    if ($user->role === 'branch_admin' && $user->branch_id) {
+        $branchesQ->where('id', $user->branch_id);
+    }
+    $branches = $branchesQ->get();
+
+    return view('admin.attendance.index', compact(
+        'attendances', 'startDate', 'endDate', 'systems', 'branches', 'systemId', 'branchId'
+    ));
+}
+
 
 
 
@@ -256,70 +288,79 @@ class AttendanceController extends Controller
      * expects: date_from, date_to, card_serial_number, page, per_page
      */
     public function search(Request $request)
-    {
-        $auth = auth()->user();
+{
+    $auth = auth()->user();
 
-        $q = Attendance::with(['user', 'player', 'branch']);
+    $q = Attendance::with(['user', 'player', 'branch' => fn($b) => $b->withTrashed()]);
 
-        // scope by role (same rules as index)
-        switch ($auth->role) {
-            case 'full_admin':
-                break;
-            case 'system_admin':
-                if ($auth->system_id) {
-                    $q->whereHas('user', fn($u) => $u->where('system_id', $auth->system_id));
-                }
-                break;
-            case 'branch_admin':
-                if ($auth->branch_id) {
-                    $q->whereHas('user', fn($u) => $u->where('branch_id', $auth->branch_id));
-                }
-                break;
-            case 'academy_admin':
-                $academyIds = $auth->academy_id;
-                if (is_string($academyIds)) $academyIds = json_decode($academyIds, true) ?: [];
-                if (is_int($academyIds))   $academyIds = [$academyIds];
-                if (!is_array($academyIds)) $academyIds = [];
-                if ($academyIds) {
-                    $q->whereHas('player', fn($p) => $p->whereIn('academy_id', $academyIds));
-                }
-                break;
-            case 'player':
-                $q->where('user_id', $auth->id);
-                break;
-            default:
-                return response()->json(['ok' => false], 403);
-        }
-
-        // filters (POST)
-        if ($request->filled('card_serial_number')) {
-            $serial = trim($request->card_serial_number);
-            $q->whereHas('user', fn($u) => $u->where('card_serial_number', $serial));
-        }
-
-        if ($request->filled('date_from')) {
-            $q->whereDate('scanned_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $q->whereDate('scanned_at', '<=', $request->date_to);
-        }
-
-        $q->orderByDesc('scanned_at');
-
-        $perPage = (int)($request->input('per_page', 20));
-        $page    = (int)($request->input('page', 1));
-        $records = $q->paginate($perPage, ['*'], 'page', $page);
-
-
-        $html = View::make('admin.attendance._table', compact('records'))->render();
-
-        return response()->json([
-            'ok'       => true,
-            'html'     => $html,
-            'paginate' => [
-                'current_page' => $records->currentPage(),
-                'last_page'    => $records->lastPage(),
-            ]
-        ]);
+    // ---------- Role scoping (same as index) ----------
+    switch ($auth->role) {
+        case 'full_admin':
+            break;
+        case 'system_admin':
+            if ($auth->system_id) {
+                $q->whereHas('user', fn($u) => $u->where('system_id', $auth->system_id));
+            }
+            break;
+        case 'branch_admin':
+            if ($auth->branch_id) {
+                $q->whereHas('user', fn($u) => $u->where('branch_id', $auth->branch_id));
+            }
+            break;
+        case 'academy_admin':
+            $academyIds = $auth->academy_id;
+            if (is_string($academyIds)) $academyIds = json_decode($academyIds, true) ?: [];
+            if (is_int($academyIds))   $academyIds = [$academyIds];
+            if (!is_array($academyIds)) $academyIds = [];
+            if ($academyIds) {
+                $q->whereHas('player', fn($p) => $p->whereIn('academy_id', $academyIds));
+            }
+            break;
+        case 'player':
+            $q->where('user_id', $auth->id);
+            break;
+        default:
+            return response()->json(['ok' => false], 403);
     }
+
+    // ---------- NEW: Filters: system_id + branch_id ----------
+    if ($request->filled('system_id')) {
+        $q->whereHas('branch', fn($b) => $b->withTrashed()->where('system_id', $request->system_id));
+    }
+    if ($request->filled('branch_id')) {
+        $q->where('branch_id', $request->branch_id);
+    }
+
+    // Card serial filter
+    if ($request->filled('card_serial_number')) {
+        $serial = trim($request->card_serial_number);
+        $q->whereHas('user', fn($u) => $u->where('card_serial_number', $serial));
+    }
+
+    // Date filters
+    if ($request->filled('date_from')) {
+        $q->whereDate('scanned_at', '>=', $request->date_from);
+    }
+    if ($request->filled('date_to')) {
+        $q->whereDate('scanned_at', '<=', $request->date_to);
+    }
+
+    $q->orderByDesc('scanned_at');
+
+    $perPage = (int)($request->input('per_page', 20));
+    $page    = (int)($request->input('page', 1));
+    $records = $q->paginate($perPage, ['*'], 'page', $page);
+
+    $html = \View::make('admin.attendance._table', compact('records'))->render();
+
+    return response()->json([
+        'ok'       => true,
+        'html'     => $html,
+        'paginate' => [
+            'current_page' => $records->currentPage(),
+            'last_page'    => $records->lastPage(),
+        ]
+    ]);
+}
+
 }

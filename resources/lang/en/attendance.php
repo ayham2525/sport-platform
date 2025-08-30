@@ -50,10 +50,15 @@ return [
         'date_from'  => 'Date From',
         'date_to'    => 'Date To',
         'serial'     => 'Card Serial',
+        'system'    => 'System',
+
     ],
     'messages' => [
         'saved'     => 'Attendance saved.',
         'not_found' => 'No user found for this card.',
+    ],
+    'filters' => [
+         'any'       => 'Any',
     ],
 
 
