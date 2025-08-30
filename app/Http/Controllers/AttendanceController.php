@@ -20,7 +20,11 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        $query = Attendance::with(['user', 'player', 'branch']);
+       $query = Attendance::with([
+    'user',
+    'player',
+    'branch' => fn($q) => $q->withTrashed(),
+]);
 
         switch ($user->role) {
             case 'full_admin':
